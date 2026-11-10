@@ -3,7 +3,7 @@ import {validateAccountConfig,accountStorageKey} from './account-model.js';
 let client=null,config=null,user=null,initializing=false;
 const $=s=>document.querySelector(s);
 function renderAccount(){
-  const available=Boolean(client&&config);
+  const available=Boolean(client&&config), hasProviders=available&&(config.providers.google||config.providers.apple);
   $('#account-button-label').textContent=user?'Mi cuenta':'Cuenta';
   $('#account-heading').textContent=user?'Tu cuenta':'Tu espacio personal';
   $('#account-name').textContent=user?.user_metadata?.full_name||user?.user_metadata?.name||user?.email||'';
@@ -11,9 +11,9 @@ function renderAccount(){
   $('#account-email').textContent=user?.email||'';
   $('#account-providers').hidden=Boolean(user);
   $('#signout-button').hidden=!user;
-  $('#account-state').textContent=user?'Sesión iniciada':initializing?'Comprobando cuenta…':available?'Acceso disponible':'Modo local';
+  $('#account-state').textContent=user?'Sesión iniciada':initializing?'Comprobando cuenta…':hasProviders?'Acceso disponible':available?'Servicio conectado':'Modo local';
   $('#account-description').textContent=user?'Tu biblioteca de esta cuenta está separada de la biblioteca sin cuenta en este navegador.':'Organiza tus lecturas sin cuenta. El acceso con Google y Apple estará disponible al activar el servicio de cuentas.';
-  $('#account-availability').textContent=user?'La sincronización entre dispositivos todavía no está activada.':available?'Elige uno de los proveedores disponibles.':'El inicio de sesión todavía no está activado. Puedes seguir usando todas las funciones locales.';
+  $('#account-availability').textContent=user?'La sincronización entre dispositivos todavía no está activada.':hasProviders?'Elige uno de los proveedores disponibles.':available?'El servicio de cuentas está conectado. Google y Apple están pendientes de activación.':'El inicio de sesión todavía no está activado. Puedes seguir usando todas las funciones locales.';
   for(const provider of ['google','apple']){
     const enabled=available&&config.providers[provider]&&!initializing;
     $(`#signin-${provider}`).disabled=!enabled;

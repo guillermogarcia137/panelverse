@@ -52,3 +52,8 @@ GitHub Actions repite instalación, pruebas, compilación y publicación en cada
 - https://supabase.com/docs/guides/auth/social-sign-in/auth-google
 - https://supabase.com/docs/guides/auth/social-sign-in/auth-apple
 - https://developer.apple.com/help/account/capabilities/configure-sign-in-with-apple-for-the-web
+
+## Proyecto conectado
+
+Proyecto Supabase PanelVerse creado por el propietario, región eu-north-1 (Estocolmo). URL pública configurada: https://zfsedjblvipnuztzdrbb.supabase.co . Se utiliza exclusivamente su clave publishable. El endpoint público de configuración ha respondido correctamente: Google y Apple siguen desactivados por falta de sus credenciales OAuth. No se ha probado aún un inicio de sesión real. Sitio publicado en https://guillermogarcia137.github.io/panelverse/ .
+

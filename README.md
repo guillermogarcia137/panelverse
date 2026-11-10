@@ -1,5 +1,8 @@
 # PanelVerse
 
+Aplicación publicada: https://guillermogarcia137.github.io/panelverse/
+
+
 Biblioteca personal de cómics con enlaces externos y seguimiento manual de lectura. Primera versión funcional, pensada para probar en Windows y adaptar después la estética con Guillermo.
 
 ## Probar en local
@@ -58,7 +61,7 @@ Esta versión usa HTML, CSS y módulos JavaScript nativos para poder ejecutarse 
 
 Repositorio: https://github.com/guillermogarcia137/panelverse
 
-Destino previsto: https://guillermogarcia137.github.io/panelverse/
+Sitio publicado: https://guillermogarcia137.github.io/panelverse/
 
 Publicación mediante `.github/workflows/pages.yml`: cada push a main ejecuta las pruebas y publica dist/ en GitHub Pages. Para publicar después de la revisión local, compila con `node scripts/build.mjs` y publica `dist/` mediante GitHub Pages (Actions). Todas las rutas son relativas y admiten el subdirectorio `/panelverse/`. Instalar en iPad requiere servir por HTTPS y usar Safari → Compartir → Añadir a pantalla de inicio. No se ha probado todavía en un iPad físico.
 
