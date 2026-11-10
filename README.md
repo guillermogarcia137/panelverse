@@ -4,7 +4,7 @@ Biblioteca personal de cómics con enlaces externos y seguimiento manual de lect
 
 ## Probar en local
 
-Requisito: Node.js 22 o posterior. Sin dependencias de terceros ni instalación de paquetes.
+Requisito: Node.js 22 o posterior y npm. Tras clonar, ejecuta `npm ci` y `npm run build` una vez para preparar el cliente de cuentas.
 
 1. Abre `E:\Sida moco\Panelverse`.
 2. Ejecuta `Iniciar PanelVerse.cmd`, o abre una terminal en esa carpeta y ejecuta `node scripts/serve.mjs`.
@@ -60,7 +60,7 @@ Repositorio: https://github.com/guillermogarcia137/panelverse
 
 Destino previsto: https://guillermogarcia137.github.io/panelverse/
 
-GitHub Pages **no está activado en esta entrega**. Para publicar después de la revisión local, compila con `node scripts/build.mjs` y publica `dist/` mediante GitHub Pages (Actions). Todas las rutas son relativas y admiten el subdirectorio `/panelverse/`. Instalar en iPad requiere servir por HTTPS y usar Safari → Compartir → Añadir a pantalla de inicio. No se ha probado todavía en un iPad físico.
+Publicación mediante `.github/workflows/pages.yml`: cada push a main ejecuta las pruebas y publica dist/ en GitHub Pages. Para publicar después de la revisión local, compila con `node scripts/build.mjs` y publica `dist/` mediante GitHub Pages (Actions). Todas las rutas son relativas y admiten el subdirectorio `/panelverse/`. Instalar en iPad requiere servir por HTTPS y usar Safari → Compartir → Añadir a pantalla de inicio. No se ha probado todavía en un iPad físico.
 
 ## Siguiente conversación
 
@@ -89,4 +89,9 @@ El selector permanente, junto a Copias de seguridad, permite alternar entre Navy
 ## Galería de temas (v0.4)
 
 La paleta ampliada abre 42 temas permanentes con miniaturas y búsqueda. Incluye Nothing, Apple, GitHub, 22 paletas de Omarchy, Navy y alternativas adicionales. Los filtros permiten ver destacados, claros, oscuros y Omarchy. Tocar una miniatura aplica y guarda el tema; Listo vuelve a la biblioteca. Los datos de lectura permanecen independientes. Once pruebas pasan, incluidas comprobaciones de contraste para todas las paletas.
+
+
+## Enlaces y cuentas (v0.5)
+
+Documentación y repositorio accesibles desde el lateral y el pie (también en móvil). Pantalla de Cuenta con proveedores Google y Apple preparados, desactivados hasta configurar el servicio real. Bibliotecas locales separadas por usuario sin migración automática ni sincronización en la nube. Estado de activación y guía completa en ACCOUNTS.md.
 

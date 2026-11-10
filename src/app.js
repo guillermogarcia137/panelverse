@@ -1,10 +1,13 @@
 import {STORAGE_KEY,statuses,seed,validateSeries,parseBackup,mergeSeries,advance,selectSeries} from './model.js';
+import {initializeAccount} from './account.js';
+import {accountStorageKey} from './account-model.js';
 const $ = s=>document.querySelector(s);
 const escape = value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let series=[],filter='all',loadFailed=false;
-try {const raw=localStorage.getItem(STORAGE_KEY); series=raw===null?structuredClone(seed):parseBackup(raw);} catch {loadFailed=true;}
+let series=[],filter='all',loadFailed=false,activeStorageKey=STORAGE_KEY;
+function loadLibrary(userId=null){activeStorageKey=accountStorageKey(userId);series=[];loadFailed=false;try{const raw=localStorage.getItem(activeStorageKey);series=raw===null?(userId?[]:structuredClone(seed)):parseBackup(raw);}catch{loadFailed=true;}}
+loadLibrary();
 function toast(message){$('#toast').textContent=message;$('#toast').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').classList.remove('show'),5000);}
-function save(next){if(loadFailed){toast('No se pudo leer la biblioteca guardada. Exporta los datos originales desde Copias de seguridad antes de continuar.');return false;}try{localStorage.setItem(STORAGE_KEY,JSON.stringify({version:1,series:next}));series=next;render();return true;}catch{toast('No se pudo guardar. Puede que el navegador no tenga espacio o bloquee el almacenamiento. Exporta una copia.');return false;}}
+function save(next){if(loadFailed){toast('No se pudo leer la biblioteca guardada. Exporta los datos originales desde Copias de seguridad antes de continuar.');return false;}try{localStorage.setItem(activeStorageKey,JSON.stringify({version:1,series:next}));series=next;render();return true;}catch{toast('No se pudo guardar. Puede que el navegador no tenga espacio o bloquee el almacenamiento. Exporta una copia.');return false;}}
 function cover(s,cls=''){return `<div class="cover ${cls}"><div class="cover-fallback"><span>PV / ${escape(s.publisher||'TU COLECCIÓN')}</span><strong>${escape(s.title)}</strong><small>UNA HISTORIA POR DESCUBRIR</small></div>${s.cover?`<img src="${escape(s.cover)}" alt="Portada de ${escape(s.title)}" loading="lazy" referrerpolicy="no-referrer">`:''}</div>`;}
 function imageFallbacks(){document.querySelectorAll('.cover img').forEach(img=>img.addEventListener('error',()=>img.remove(),{once:true}));}
 function progress(s){return s.total?`<div class="progress" role="progressbar" aria-label="Progreso de ${escape(s.title)}" aria-valuenow="${s.lastRead}" aria-valuemin="0" aria-valuemax="${s.total}"><span style="width:${s.lastRead/s.total*100}%"></span></div>`:'';}
@@ -27,10 +30,13 @@ $('#navigation').addEventListener('click',e=>{const button=e.target.closest('[da
 $('#search').addEventListener('input',render);$('#sort').addEventListener('change',render);
 $('#add-button').addEventListener('click',()=>openEditor());$('#help-button').addEventListener('click',()=>$('#help').showModal());$('#backup-button').addEventListener('click',()=>$('#backup').showModal());
 function download(content,name){const url=URL.createObjectURL(new Blob([content],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function exportLibrary(){download(loadFailed?localStorage.getItem(STORAGE_KEY)||'{}':JSON.stringify({version:1,exportedAt:new Date().toISOString(),series},null,2),`panelverse-${new Date().toISOString().slice(0,10)}.json`);}
+function exportLibrary(){download(loadFailed?localStorage.getItem(activeStorageKey)||'{}':JSON.stringify({version:1,exportedAt:new Date().toISOString(),series},null,2),`panelverse-${new Date().toISOString().slice(0,10)}.json`);}
 $('#export-button').addEventListener('click',exportLibrary);
 $('#import-file').addEventListener('change',async event=>{try{const file=event.target.files[0];if(!file)return;if(file.size>5_000_000)throw new Error('La copia no puede superar 5 MB.');const incoming=parseBackup(await file.text());const next=mergeSeries(series,incoming);if(!await confirmChange(`¿Importar ${incoming.length} series? Las coincidencias se actualizarán.`))return;exportLibrary();if(loadFailed){loadFailed=false;if(!save(next)){loadFailed=true;return;}}else if(!save(next))return;$('#import-result').textContent=`Importación completada: ${incoming.length} series procesadas.`;toast('Biblioteca importada.');}catch(error){$('#import-result').textContent='No se ha importado: '+error.message;}finally{event.target.value='';}});
 document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}}));
-window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY)location.reload();});
+window.addEventListener('storage',event=>{if(event.key===activeStorageKey)location.reload();});
 render();if(loadFailed)toast('No se ha podido leer la biblioteca. Tus datos originales se conservan; puedes exportarlos.');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+window.addEventListener('panelverse:account-changed',event=>{for(const id of ['editor','details','backup','confirmation'])document.getElementById(id).close();loadLibrary(event.detail.userId);render();});
+initializeAccount().catch(()=>toast('El acceso de cuentas no está disponible.'));

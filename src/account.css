@@ -1,0 +1,23 @@
+.project-links {display:flex;flex-direction:column;gap:12px;padding:22px 13px 20px;margin-top:20px;border-top:1px solid var(--line);}
+.project-links a {display:flex;align-items:center;gap:10px;font:12px var(--ui);color:var(--t-sidebar-text,var(--text));}
+.project-links svg {width:17px;height:17px;flex-shrink:0;opacity:.8;}
+.project-links a:hover {text-decoration:underline;text-underline-offset:4px;}
+.sidebar-bottom {padding-top:17px;}
+.project-links + .sidebar-bottom {margin-top:auto;}
+.footer-links {display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.footer-links a:hover {text-decoration:underline;text-underline-offset:3px;}
+.account-trigger {display:inline-flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;}
+.account-trigger svg {width:17px;height:17px;}
+.account-badge {display:inline-block;padding:5px 10px;border:1px solid var(--line);border-radius:999px;background:var(--t-soft,var(--surface));color:var(--t-link,var(--text));font:11px var(--ui);margin-bottom:16px;}
+.account-description {font:14px/1.7 var(--ui);color:var(--muted);}
+.account-providers {display:grid;gap:10px;margin:22px 0;}
+.provider-button {display:flex;flex-direction:column;align-items:center;gap:5px;padding:15px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text);min-height:50px;font:600 14px var(--ui);}
+.provider-button small {font:11px var(--ui);color:var(--muted);}
+.provider-button:disabled {opacity:.7;cursor:default;}
+.provider-button:enabled:hover {background:var(--t-soft);border-color:var(--t-link);}
+.account-note {font:12px/1.7 var(--ui);color:var(--muted);}
+#account-profile {padding:15px 0;overflow-wrap:anywhere;}
+#account-profile p {font-size:12px;color:var(--muted);margin:7px 0;}
+[hidden] {display:none!important;}
+@media(max-width:1150px){.top-actions {gap:8px;}.account-trigger {padding-inline:10px;}}
+@media(max-width:700px){.project-links {display:none;}.top-actions {display:grid;grid-template-columns:auto minmax(0,1fr) auto;width:100%;gap:7px;}.top-actions > #connection {display:none;}.account-trigger {padding:9px;min-height:48px;}.account-trigger svg {width:19px;height:19px;}.account-trigger > span {display:none;}.top-actions > #backup-button {min-width:0;padding-inline:7px;font-size:10px;}.theme-button {min-width:128px;max-width:145px;}.footer-links {gap:14px;}footer {font-size:10px;}}
