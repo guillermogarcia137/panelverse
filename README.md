@@ -68,3 +68,10 @@ GitHub Pages **no está activado en esta entrega**. Para publicar después de la
 2. Decidir nuevas funciones y datos iniciales reales.
 3. Definir si hace falta sincronización entre dispositivos.
 4. Probar en iPad y publicar en GitHub Pages cuando se decida.
+
+## Resultado de la revisión de v0.1
+
+Alta, edición, borrado confirmado, progreso, finalización y persistencia al recargar comprobados en navegador. Vista móvil revisada a 390 × 844. Las siete pruebas automatizadas y el build pasan. La prueba de importación de archivos mediante la interfaz no se ha completado por la restricción de acceso a archivos de la extensión de Brave. La validación y fusión sí están cubiertas por pruebas de lógica. La instalación PWA y el modo offline no se han probado en un iPad físico.
+
+Documentación: https://app.notion.com/p/414453bf2fd881f481e8f77ef55ed480
+
