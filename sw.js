@@ -1,6 +1,6 @@
-const CACHE='panelverse-v2-navy-sans';
+const CACHE='panelverse-v3-themes';
 const BASE=new URL('./',self.location.href);
-const SHELL=['./','./index.html','./src/app.js','./src/model.js','./src/styles.css','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/superman.svg','./manifest.webmanifest'];
+const SHELL=['./','./index.html','./src/app.js','./src/model.js','./src/styles.css','./src/theme.js','./src/themes.css','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/superman.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL.map(path=>new URL(path,BASE).href))));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('panelverse-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).origin!==BASE.origin||!new URL(event.request.url).pathname.startsWith(BASE.pathname))return;event.respondWith(fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(event.request,copy)));}return response;}).catch(async()=>{const cached=await caches.match(event.request);if(cached)return cached;if(event.request.mode==='navigate')return caches.match(new URL('./index.html',BASE).href);return new Response('Sin conexión',{status:503});}));});

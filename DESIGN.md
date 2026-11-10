@@ -48,3 +48,12 @@ Revisión visual en navegador a tamaño de escritorio, 390 × 844 y 1024 × 1366
 
 Se sustituye la familia monoespaciada por Segoe UI Variable Text / Segoe UI / Arial en la interfaz. Menú y textos secundarios más legibles, etiquetas con menos espaciado y subtítulo principal algo mayor. La trama de puntos queda reservada al primer renglón del titular. Se conserva la paleta navy.
 
+
+## Selector permanente de estilos (v0.3)
+
+Selector a la derecha de Copias de seguridad, disponible también en móvil. Ofrece Navy · Técnico (versión inicial con etiquetas monoespaciadas), Navy · Sans (la revisión aprobada) y GitHub · Navy (tipografía nativa de Primer, controles compactos, bordes de 6px y azul navy). La variante inicial al estrenar el selector es GitHub · Navy. La elección se guarda en localStorage, clave panelverse.theme.v1, se restaura al abrir y se propaga a otras pestañas. No altera la biblioteca. Borrar los datos del navegador elimina también la preferencia; no existe sincronización entre dispositivos.
+
+El selector se queda como parte del producto. Los nuevos estilos deben añadirse al registro de src/theme.js y a src/themes.css, conservando los anteriores. Si el navegador bloquea el almacenamiento, el tema se aplica para la sesión y se anuncia que no se ha podido guardar.
+
+Referencia tipográfica: https://github.com/primer/css/blob/main/src/support/variables/typography.scss
+

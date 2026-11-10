@@ -1,0 +1,80 @@
+/* Selector permanente. Cada nueva variante se registra en theme.js y en este archivo. */
+.theme-picker { display: inline-flex; align-items: center; gap: 8px; color: #b5c7e2; font: 12px var(--ui); }
+.theme-picker svg { width: 16px; height: 16px; flex-shrink: 0; }
+.theme-picker select { width: 153px; min-height: 40px; padding: 8px 10px; font: 12px var(--ui); background: var(--surface); border-color: var(--line); }
+.top-actions { gap: 12px; }
+
+/* Conserva la versión técnica inicial como alternativa seleccionable. */
+:root[data-theme="navy-original"] { --ui: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+[data-theme="navy-original"] .nav-item, [data-theme="navy-original"] h1,
+[data-theme="navy-original"] h2, [data-theme="navy-original"] h3,
+[data-theme="navy-original"] .intro-copy > p, [data-theme="navy-original"] button,
+[data-theme="navy-original"] input, [data-theme="navy-original"] textarea,
+[data-theme="navy-original"] .welcome-strip, [data-theme="navy-original"] .reading-line,
+[data-theme="navy-original"] .brand { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+[data-theme="navy-original"] .eyebrow { font-size: 10px; letter-spacing: 1.5px; }
+[data-theme="navy-original"] .nav-label { font-size: 9px; letter-spacing: 1.4px; }
+[data-theme="navy-original"] .nav-item { font-size: 12px; font-weight: 400; }
+[data-theme="navy-original"] .intro .eyebrow { font-size: 9px; }
+[data-theme="navy-original"] .intro-copy > p:last-of-type { font-size: 14px; }
+[data-theme="navy-original"] .brand small { font-size: 8px; letter-spacing: 1px; }
+[data-theme="navy-original"] .theme-picker { font-family: 'Segoe UI', sans-serif; }
+
+/* Stack de fuentes nativas de Primer; estética GitHub adaptada a navy y azul. */
+:root[data-theme="github-navy"] {
+  --ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --bg: #0b1220;
+  --surface: #111d30;
+  --line: #2c3b51;
+  --text: #e6edf3;
+  --muted: #a3b1c6;
+  font-size: 14px;
+}
+[data-theme="github-navy"] body::before { background: none; }
+[data-theme="github-navy"] .sidebar { background: #090f1b; }
+[data-theme="github-navy"] .brand { font-weight: 600; letter-spacing: -.6px; }
+[data-theme="github-navy"] .brand-icon { border-radius: 6px; background: #14253c; }
+[data-theme="github-navy"] .brand-icon::after { border-color: #090f1b; }
+[data-theme="github-navy"] .brand small { font-size: 9px; letter-spacing: .1px; }
+[data-theme="github-navy"] .nav-label { font-size: 12px; font-weight: 600; letter-spacing: 0; }
+[data-theme="github-navy"] .nav-item { border-radius: 6px; font-size: 14px; font-weight: 400; }
+[data-theme="github-navy"] .nav-item.active { border-color: transparent; background: #1b2c45; box-shadow: inset 3px 0 #58a6ff; font-weight: 600; }
+[data-theme="github-navy"] .nav-item b { background: #2d3d53; color: #d4dfea; border-radius: 999px; font-size: 11px; }
+[data-theme="github-navy"] .quiet, [data-theme="github-navy"] .theme-picker select { border-radius: 6px; background: #18263a; border-color: #3a4a61; box-shadow: 0 1px 0 #0004; font-size: 12px; }
+[data-theme="github-navy"] .primary { border-radius: 6px; background: #1f6feb; border-color: #4489ef; font-size: 13px; padding: 10px 18px; box-shadow: 0 1px 0 #0004; min-height: 38px; }
+[data-theme="github-navy"] .primary:hover { background: #388bfd; }
+[data-theme="github-navy"] .intro { grid-template-columns: 1fr auto; padding: 36px 0 30px; }
+[data-theme="github-navy"] h1 { font-size: clamp(34px, 3.3vw, 50px); font-weight: 600; letter-spacing: -1.5px; line-height: 1.17; }
+[data-theme="github-navy"] .dot-word { color: var(--text); background: none; font-weight: 600; }
+[data-theme="github-navy"] .intro .eyebrow { font-size: 11px; margin-bottom: 18px; letter-spacing: .3px; }
+[data-theme="github-navy"] .intro-copy > p:last-of-type { font-size: 15px; color: var(--muted); }
+[data-theme="github-navy"] .intro-actions { margin-top: 22px; }
+[data-theme="github-navy"] .hero-glyph { width: 225px; border-radius: 10px; opacity: .9; }
+[data-theme="github-navy"] .welcome-strip, [data-theme="github-navy"] .resume-card { border-radius: 6px; background: #111f33; border-color: #30425b; margin-bottom: 28px; }
+[data-theme="github-navy"] .eyebrow { letter-spacing: .2px; }
+[data-theme="github-navy"] h2 { font-size: 22px; font-weight: 600; letter-spacing: -.4px; }
+[data-theme="github-navy"] .comic-card { border-radius: 7px; background: #101c2d; border-color: #304058; }
+[data-theme="github-navy"] .comic-card:hover { transform: none; border-color: #6c8bb5; }
+[data-theme="github-navy"] .cover { border-radius: 4px; }
+[data-theme="github-navy"] .title-button { font-weight: 600; color: #81b8ff; }
+[data-theme="github-navy"] .status { font-size: 10px; }
+[data-theme="github-navy"] dialog { border-radius: 12px; border-color: #3a506e; }
+[data-theme="github-navy"] .read-link { color: #81b8ff; font-size: 11px; }
+[data-theme="github-navy"] .sidebar-bottom { font-size: 11px; }
+
+@media (max-width: 1150px) { .top-actions > #connection { display: none; } }
+@media (max-width: 900px) { [data-theme="github-navy"] .hero-glyph { display: none; } }
+@media (max-width: 700px) {
+  .topbar { height: auto; min-height: 70px; padding: 13px 0; gap: 10px; flex-wrap: wrap; }
+  .topbar > .eyebrow { width: 100%; margin: 0; }
+  .top-actions { width: 100%; gap: 9px; }
+  .top-actions > #backup-button { flex: 1; min-height: 40px; font-size: 11px; padding: 9px 8px; white-space: nowrap; }
+  .theme-picker { margin-left: auto; gap: 5px; }
+  .theme-picker select { width: 139px; font-size: 11px; padding-inline: 7px; }
+  [data-theme="navy-original"] .nav-item, [data-theme="github-navy"] .nav-item { font-size: 11px; }
+  [data-theme="navy-original"] .intro .eyebrow { font-size: 8px; }
+  [data-theme="github-navy"] .intro { display: block; padding: 28px 0; }
+  [data-theme="github-navy"] h1 { font-size: 39px; letter-spacing: -1.2px; }
+  [data-theme="github-navy"] .intro .eyebrow { font-size: 9px; }
+}
+@media (max-width: 360px) { .theme-picker svg { display: none; } .theme-picker select { width: 128px; } }
