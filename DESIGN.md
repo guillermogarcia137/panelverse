@@ -43,3 +43,8 @@ Revisión visual en navegador a tamaño de escritorio, 390 × 844 y 1024 × 1366
 - https://omarchy.org/
 - https://www.nategentile.com/
 - https://moure.dev/
+
+## Ajuste tipográfico tras revisión
+
+Se sustituye la familia monoespaciada por Segoe UI Variable Text / Segoe UI / Arial en la interfaz. Menú y textos secundarios más legibles, etiquetas con menos espaciado y subtítulo principal algo mayor. La trama de puntos queda reservada al primer renglón del titular. Se conserva la paleta navy.
+
