@@ -85,3 +85,8 @@ Rediseño navy y azul, con detalles de puntos, tipografía de sistema y etiqueta
 
 El selector permanente, junto a Copias de seguridad, permite alternar entre Navy · Técnico, Navy · Sans y GitHub · Navy. Se recuerda el último estilo en este navegador. Los estilos futuros se añadirán a este mismo selector. Implementación en src/theme.js y src/themes.css; preferencia independiente de la biblioteca.
 
+
+## Galería de temas (v0.4)
+
+La paleta ampliada abre 42 temas permanentes con miniaturas y búsqueda. Incluye Nothing, Apple, GitHub, 22 paletas de Omarchy, Navy y alternativas adicionales. Los filtros permiten ver destacados, claros, oscuros y Omarchy. Tocar una miniatura aplica y guarda el tema; Listo vuelve a la biblioteca. Los datos de lectura permanecen independientes. Once pruebas pasan, incluidas comprobaciones de contraste para todas las paletas.
+

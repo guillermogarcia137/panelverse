@@ -57,3 +57,18 @@ El selector se queda como parte del producto. Los nuevos estilos deben añadirse
 
 Referencia tipográfica: https://github.com/primer/css/blob/main/src/support/variables/typography.scss
 
+
+## Galería de 42 ambientes (v0.4)
+
+El botón de paleta pasa de 16 a 30 px (28 px en móvil) y abre una galería permanente. Cada tema tiene una miniatura con fondo, lateral, texto, tarjetas y acento. Búsqueda por nombre y familia; filtros Todos, Destacados, Claros, Oscuros y Omarchy. Un clic aplica y guarda; Listo cierra. La preferencia mantiene la clave anterior y los tres estilos existentes.
+
+Colecciones: seis variantes Nothing (Paper, Carbon, Blanco/rojo, Blanco/azul, Negro/azul y Monochrome), Apple Light/Dark, GitHub Navy/Dark/Light, Navy Técnico/Sans, siete adicionales y 22 paletas del selector web de Omarchy. Nothing y Apple adaptan su lenguaje visual a PanelVerse; no son copias de sus páginas ni incorporan sus fuentes o logotipos propietarios.
+
+Las 22 paletas de Omarchy se extrajeron de sus variables públicas de color: Tokyo Night, White, Catppuccin, Gruvbox, Matte Black, Rosé Pine, Catppuccin Latte, Ethereal, Everforest, Flexoki Light, Hackerman, Kanagawa, Last Horizon, Lumon, Lupine, Miasma, Nord, Osaka Jade, Retro 82, Ristretto, Solitude y Vantablack. Se adaptan tokens secundarios para mantener legibilidad en los controles de PanelVerse.
+
+Referencias: https://omarchy.org/ ; https://omarchy.org/themes/ ; https://nothing.tech/ ; https://www.apple.com/ . Las paletas quedan incluidas localmente y no se consultan en cada visita.
+
+Implementación: src/theme-catalog.js contiene el catálogo y cálculo de contraste; src/theme.js aplica y guarda el tema y gestiona la galería; src/themes.css aplica colores semánticos a toda la interfaz, incluidos formularios y menú. El texto lateral se adapta a menús claros u oscuros. No modifica la biblioteca.
+
+Validación: 11 pruebas pasan; cubren los siete casos originales más catálogo único de 42 temas, colores válidos, compatibilidad con los identificadores anteriores y contraste de texto, laterales, botones y enlaces. Se recorrieron los 42 temas desde la interfaz en móvil simulado sin desbordamiento horizontal. Búsqueda Apple y persistencia al recargar comprobadas. Revisión visual de galería, Apple y Nothing, incluido formulario claro.
+
