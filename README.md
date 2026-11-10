@@ -3,7 +3,7 @@
 Aplicación publicada: https://guillermogarcia137.github.io/panelverse/
 
 
-Biblioteca personal de cómics con enlaces externos y seguimiento manual de lectura. Primera versión funcional, pensada para probar en Windows y adaptar después la estética con Guillermo.
+Biblioteca personal de cómics con enlaces externos y seguimiento manual de lectura. Con Google, biblioteca privada sincronizada entre dispositivos; sin cuenta, biblioteca local independiente. Incluye 42 temas y copias de seguridad JSON.
 
 ## Probar en local
 
@@ -14,7 +14,7 @@ Requisito: Node.js 22 o posterior y npm. Tras clonar, ejecuta `npm ci` y `npm ru
 3. Visita **http://localhost:4173/panelverse/**.
 4. Mantén la terminal abierta; Ctrl+C cierra el servidor.
 
-Usa siempre esa dirección para conservar la misma biblioteca. Cambiar de navegador, puerto o de `localhost` a `127.0.0.1` crea otro almacenamiento. Los datos locales no se trasladan automáticamente al futuro dominio público: exporta e importa la copia JSON.
+Con cuenta, iniciar sesión con el mismo Google recupera la biblioteca de Supabase. Sin cuenta, cambiar de navegador, puerto o dominio crea otro almacenamiento. «Copiar biblioteca sin cuenta» permite llevar esas series a tu cuenta conservando el original y una copia JSON.
 
 ## Incluido en v0.1
 
@@ -30,7 +30,7 @@ Usa siempre esa dirección para conservar la misma biblioteca. Cambiar de navega
 
 ## Datos y límites
 
-No hay cuenta, backend, analítica ni sincronización entre dispositivos. Los datos están en `localStorage`, clave `panelverse.library.v1`. Exporta copias periódicas. El máximo es 2000 series; una importación admite hasta 5 MB. La importación actualiza los mismos identificadores y añade los demás. Antes se descarga una copia del estado actual. Comprueba que tu navegador permita la descarga.
+La cuenta de Google utiliza Supabase y una copia local transaccional en IndexedDB. Los cambios se sincronizan automáticamente; los cambios sin conexión quedan pendientes. La biblioteca sin cuenta permanece en `localStorage`, clave `panelverse.library.v1`. No hay analítica. Exporta copias periódicas. El máximo es 2000 series; una importación admite hasta 5 MB. La importación actualiza los mismos identificadores y añade los demás. Antes se descarga una copia del estado actual. Comprueba que tu navegador permita la descarga.
 
 La aplicación no lee el progreso de Marmota, no descarga cómics y no calcula URLs del siguiente número. Solo guarda y abre los enlaces que añadas. No hay integración con Panels/PanelBridge.
 
@@ -46,7 +46,7 @@ También están definidos `npm start`, `npm test` y `npm run build` cuando npm e
 
 ## Arquitectura
 
-La interfaz utiliza HTML, CSS y módulos JavaScript nativos. La compilación empaqueta el SDK oficial de Supabase para el acceso opcional a cuentas. La biblioteca se guarda localmente; la sincronización entre dispositivos aún no está implementada.
+La interfaz utiliza HTML, CSS y módulos JavaScript nativos. La compilación empaqueta el SDK oficial de Supabase para el acceso opcional a cuentas. La biblioteca de la cuenta se guarda en Supabase con una copia local y cola persistente en IndexedDB. Los conflictos se resuelven explícitamente. Detalles y pruebas en [SYNC.md](SYNC.md).
 
 | Archivo | Responsabilidad |
 | --- | --- |
@@ -57,7 +57,7 @@ La interfaz utiliza HTML, CSS y módulos JavaScript nativos. La compilación emp
 | `scripts/serve.mjs` | Servidor local ligado a loopback |
 | `scripts/build.mjs` | Exportación estática |
 
-## Publicación futura
+## Publicación
 
 Repositorio: https://github.com/guillermogarcia137/panelverse
 
@@ -104,3 +104,8 @@ Documentación y repositorio accesibles desde el lateral y el pie (también en m
 Google está activado mediante Supabase Auth. Se han comprobado en localhost el acceso real, el retorno OAuth con PKCE, la persistencia tras recargar y el cierre de sesión. La biblioteca sin cuenta se recupera al salir y permanece separada de la cuenta. El inicio de sesión no sincroniza la biblioteca entre dispositivos. Apple sigue pendiente de configuración.
 
 Las credenciales OAuth las ha guardado el propietario directamente en Supabase. El repositorio solo incluye la URL y clave publishable públicas. Guía y direcciones en ACCOUNTS.md.
+## Biblioteca en la nube (v0.6)
+
+Sincronización privada por cuenta, guardado sin conexión con reintentos, resolución de conflictos y copia de la biblioteca sin cuenta. La web y localhost usan la misma biblioteca cuando se inicia sesión con la misma cuenta. El estado indica cuándo los datos están pendientes o confirmados en la nube.
+
+Migración y pruebas de seguridad en `supabase/`; arquitectura, límites y uso en [SYNC.md](SYNC.md). La verificación SQL ha pasado en Supabase real. IndexedDB real ha superado las comprobaciones de escrituras concurrentes, persistencia de la cola y reintentos sin duplicados. La prueba en un iPad físico sigue pendiente.

@@ -19,5 +19,23 @@
 #account-profile {padding:15px 0;overflow-wrap:anywhere;}
 #account-profile p {font-size:12px;color:var(--muted);margin:7px 0;}
 [hidden] {display:none!important;}
+.sync-panel{margin:0 0 26px;padding:22px;border:1px solid var(--line);border-radius:12px;background:var(--surface);}
+.sync-summary{display:flex;gap:22px;align-items:center;justify-content:space-between;}
+.sync-summary h3{font:600 16px var(--ui);margin:7px 0;}
+.sync-summary p:not(.eyebrow){font:12px/1.7 var(--ui);color:var(--muted);margin:6px 0 0;max-width:650px;}
+.sync-summary .eyebrow{font-size:10px;margin:0;color:var(--t-link,var(--text));}
+.sync-actions{display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0;}
+.sync-actions .quiet{font-size:12px;min-height:42px;}
+.sync-panel[data-state="error"],.sync-panel[data-state="conflicts"]{border-color:var(--t-link,var(--line));}
+.sync-conflict{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);overflow-wrap:anywhere;}
+.sync-conflict h3{font:600 15px var(--ui);}
+.sync-versions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0;}
+.sync-versions>div{min-width:0;font:12px/1.7 var(--ui);color:var(--muted);background:var(--bg);padding:12px;border-radius:8px;white-space:pre-wrap;}
+.sync-versions p{font-size:12px;margin:6px 0;}.sync-versions details{max-height:260px;overflow:auto;}.sync-versions summary{cursor:pointer;color:var(--t-link,var(--text));}
+.sync-versions strong,.sync-versions span{display:block;}
+.sync-versions strong{color:var(--text);margin-bottom:5px;}
+.sync-versions span{max-height:140px;overflow:auto;margin-top:6px;}
+@media(max-width:1150px){.sync-summary{align-items:flex-start;flex-direction:column;gap:12px;}}
+@media(max-width:700px){.sync-panel{padding:16px;}.sync-actions{width:100%;}.sync-actions button{flex:1;}.sync-versions{grid-template-columns:1fr;gap:4px;}}
 @media(max-width:1150px){.top-actions {gap:8px;}.account-trigger {padding-inline:10px;}}
 @media(max-width:700px){.project-links {display:none;}.top-actions {display:grid;grid-template-columns:auto minmax(0,1fr) auto;width:100%;gap:7px;}.top-actions > #connection {display:none;}.account-trigger {padding:9px;min-height:48px;}.account-trigger svg {width:19px;height:19px;}.account-trigger > span {display:none;}.top-actions > #backup-button {min-width:0;padding-inline:7px;font-size:10px;}.theme-button {min-width:128px;max-width:145px;}.footer-links {gap:14px;}footer {font-size:10px;}}

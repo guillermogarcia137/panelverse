@@ -2,9 +2,9 @@
 
 ## Estado actual
 
-La interfaz, los adaptadores OAuth y las bibliotecas locales separadas por identificador de usuario están implementados. El proyecto Supabase ya está conectado y Google está activado con credenciales reales. Apple permanece desactivado. No se ha simulado ningún inicio de sesión. El modo local conserva su clave y sus datos anteriores.
+La interfaz, los adaptadores OAuth y las bibliotecas privadas sincronizadas por cuenta están implementados. El proyecto Supabase ya está conectado y Google está activado con credenciales reales. Apple permanece desactivado. No se ha simulado ningún inicio de sesión. El modo local conserva su clave y sus datos anteriores.
 
-La sincronización de la biblioteca entre dispositivos todavía no está implementada. Iniciar sesión no equivale a sincronizar: cada cuenta tiene un espacio local independiente en este navegador. No hay subida automática de la biblioteca sin cuenta.
+La biblioteca de cada cuenta se sincroniza con Supabase y conserva una copia transaccional en IndexedDB. Los cambios sin conexión quedan pendientes; los conflictos requieren elegir una versión. La biblioteca sin cuenta no se sube automáticamente. Uso, límites, seguridad y pruebas en [SYNC.md](SYNC.md).
 
 ## Recomendación
 
@@ -33,8 +33,8 @@ Requiere cuenta Apple Developer, App ID con Sign in with Apple, Services ID para
 - SDK oficial `@supabase/supabase-js`, versión fijada en package-lock.json y empaquetado localmente mediante esbuild.
 - OAuth con PKCE, sesión persistente y renovación gestionadas por el SDK. Se valida la cuenta inicial contra el servicio.
 - El callback vuelve a la raíz real de la aplicación, compatible con `/panelverse/` y localhost. Se eliminan del historial los parámetros OAuth consumidos y el service worker no cachea URLs con códigos de autorización.
-- La biblioteca sin cuenta continúa en `panelverse.library.v1`. Las cuentas utilizan `panelverse.library.v1.user.<uuid>`. Cambiar de cuenta cierra los formularios abiertos para evitar guardar en el espacio anterior.
-- La autenticación utiliza `panelverse.auth.v1`. Cerrar sesión no elimina bibliotecas locales.
+- La biblioteca sin cuenta continúa en `panelverse.library.v1`. Las cuentas utilizan IndexedDB por usuario y mantienen un espejo compatible en `panelverse.library.v1.user.<uuid>`. Cambiar de cuenta cierra los formularios abiertos para evitar guardar en el espacio anterior.
+- La autenticación utiliza `panelverse.auth.v1`. Cerrar sesión conserva la copia local y los cambios pendientes de cada cuenta. Las funciones de la nube comprueban el propietario esperado para impedir mezclas durante un cambio de sesión.
 - Los proveedores aparecen desactivados si falta configuración. La aplicación no realiza llamadas a Supabase en modo local.
 
 ## Preparar el proyecto después de clonarlo

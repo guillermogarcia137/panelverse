@@ -1,0 +1,35 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>PanelVerse · Verificación de sincronización</title><style>body{font:16px/1.6 system-ui;background:#080f20;color:#f5f7fc;max-width:850px;margin:50px auto;padding:20px}li{margin:18px 0}.pass{color:#a8e9c3}.fail{color:#ff9b9b}p{color:#b4cfff}</style><h1>Verificación de sincronización</h1><p>Pruebas aisladas con IndexedDB real y un servicio simulado. No se envían datos a Supabase.</p><ol id="results"></ol><p id="state" role="status">Ejecutando…</p><script type="module">
+import {createSyncStore} from '../src/sync-store.js';
+import {emptySyncState,editLibrary,visibleSeries} from '../src/sync-model.js';
+import {createLibrarySync} from '../src/library-sync.js';
+import {seed} from '../src/model.js';
+let failures=0,count=0;
+const assert=(condition,message)=>{if(!condition)throw Error(message);};
+async function check(name,run){const li=document.createElement('li');try{await run();li.textContent='PASS · '+name;li.className='pass';}catch(error){failures++;li.textContent='FAIL · '+name+' · '+error.message;li.className='fail';}document.querySelector('#results').append(li);count++;}
+const item=id=>({...seed[0],id,title:'Prueba aislada '+id});
+const options={events:null,intervalMs:0,autoStart:false,channelFactory:()=>null};
+await check('20 escrituras concurrentes conservan las 20 series en IndexedDB',async()=>{
+  const owner=crypto.randomUUID(),a=createSyncStore(),b=createSyncStore();await a.update(owner,()=>emptySyncState(owner));
+  await Promise.all(Array.from({length:20},(_,i)=>(i%2?a:b).update(owner,current=>{const before=visibleSeries(current);return editLibrary(current,before,[...before,item('concurrent-'+i)]);}))) ;
+  assert(visibleSeries(await a.read(owner)).length===20,'Se perdió una escritura concurrente.');
+  try{await b.update(owner,()=>{throw Error('rollback');});}catch{}
+  assert(visibleSeries(await a.read(owner)).length===20,'Un fallo alteró los datos confirmados.');
+});
+await check('Un cambio sin conexión sobrevive a reiniciar el motor y vuelve a enviarse',async()=>{
+  const owner=crypto.randomUUID(),rows=new Map();let connected=false,requests=0;
+  const client={async rpc(name,args){assert(args.expected_owner===owner,'Cuenta incorrecta');requests++;if(name.endsWith('pull'))return {data:[...rows.values()]};return {data:args.mutations.map(m=>{const r={id:m.id,revision:1,operationId:m.operationId,data:m.data,deleted:m.deleted};rows.set(m.id,r);return {id:m.id,status:'applied',record:r};})};}};
+  let engine=createLibrarySync({...options,owner,client,store:createSyncStore(),online:()=>connected});
+  try{await engine.ready;await engine.commit([],[item('offline')]);await engine.sync();assert(requests===0,'Se usó la red estando sin conexión.');}finally{engine.stop();}
+  engine=createLibrarySync({...options,owner,client,store:createSyncStore(),online:()=>connected});
+  try{await engine.ready;assert(visibleSeries(engine.getState()).length===1,'No se recuperó la copia persistida.');connected=true;await engine.sync();assert(rows.size===1&&engine.getState().pending.length===0,'No se confirmó el cambio tras reconectar.');}finally{engine.stop();}
+});
+await check('Una respuesta perdida se reintenta sin duplicar la revisión en la nube',async()=>{
+  const owner=crypto.randomUUID();let remote=null,lost=true;const sent=[];
+  const client={async rpc(name,args){if(name.endsWith('pull'))return {data:remote?[remote]:[]};const m=args.mutations[0];sent.push(m.operationId);remote??={id:m.id,revision:1,operationId:m.operationId,data:m.data,deleted:m.deleted};if(lost){lost=false;return {error:{code:'NETWORK'}};}return {data:[{id:m.id,status:'applied',record:remote}]};}};
+  let engine=createLibrarySync({...options,owner,client,store:createSyncStore()});
+  try{await engine.ready;await engine.commit([],[item('retry')]);await engine.sync();assert(engine.getState().pending.length===1,'Se perdió el cambio pendiente.');}finally{engine.stop();}
+  engine=createLibrarySync({...options,owner,client,store:createSyncStore()});
+  try{await engine.ready;await engine.sync();assert(sent.length===2&&sent[0]===sent[1]&&remote.revision===1&&engine.getState().pending.length===0,'El reintento no fue idempotente.');}finally{engine.stop();}
+});
+document.querySelector('#state').textContent=failures?`${failures} de ${count} pruebas fallaron.`:`PASS: ${count} pruebas de navegador correctas.`;
+</script></html>

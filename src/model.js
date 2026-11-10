@@ -5,6 +5,7 @@ export function httpUrl(value, optional = false) {
   if (!value && optional) return '';
   const parsed = new URL(value);
   if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error('Usa enlaces http:// o https:// sin credenciales.');
+  if(parsed.href.length>2048)throw new Error('Los enlaces no pueden superar 2048 caracteres.');
   return parsed.href;
 }
 export function validateSeries(input) {
@@ -19,7 +20,7 @@ export function validateSeries(input) {
   const id = input.id ? String(input.id) : crypto.randomUUID();
   if (!/^[\w-]{1,100}$/.test(id)) throw new Error('Identificador de serie no válido.');
   const cover = input.cover === './assets/superman.svg' ? input.cover : httpUrl(input.cover || '', true);
-  return {id,title,publisher:String(input.publisher || '').slice(0,60),status:input.status,lastRead,total,url:httpUrl(input.url),cover,notes:String(input.notes || '').slice(0,2000),updatedAt:typeof input.updatedAt === 'string' && Number.isFinite(Date.parse(input.updatedAt)) ? input.updatedAt : new Date().toISOString()};
+  return {id,title,publisher:String(input.publisher || '').slice(0,60),status:input.status,lastRead,total,url:httpUrl(input.url),cover,notes:String(input.notes || '').slice(0,2000),updatedAt:typeof input.updatedAt === 'string' && Number.isFinite(Date.parse(input.updatedAt)) ? new Date(input.updatedAt).toISOString() : new Date().toISOString()};
 }
 export function parseBackup(text) {
   const data = JSON.parse(text);
