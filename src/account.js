@@ -12,7 +12,7 @@ function renderAccount(){
   $('#account-providers').hidden=Boolean(user);
   $('#signout-button').hidden=!user;
   $('#account-state').textContent=user?'Sesión iniciada':initializing?'Comprobando cuenta…':hasProviders?'Acceso disponible':available?'Servicio conectado':'Modo local';
-  $('#account-description').textContent=user?'Tu biblioteca de esta cuenta está separada de la biblioteca sin cuenta en este navegador.':'Organiza tus lecturas sin cuenta. El acceso con Google y Apple estará disponible al activar el servicio de cuentas.';
+  $('#account-description').textContent=user?'Tu biblioteca de esta cuenta está separada de la biblioteca sin cuenta en este navegador.':hasProviders?'Inicia sesión para tener tu espacio personal en este navegador. También puedes seguir usando la biblioteca sin cuenta.':'Organiza tus lecturas sin cuenta. El acceso con Google y Apple estará disponible al activar el servicio de cuentas.';
   $('#account-availability').textContent=user?'La sincronización entre dispositivos todavía no está activada.':hasProviders?'Elige uno de los proveedores disponibles.':available?'El servicio de cuentas está conectado. Google y Apple están pendientes de activación.':'El inicio de sesión todavía no está activado. Puedes seguir usando todas las funciones locales.';
   for(const provider of ['google','apple']){
     const enabled=available&&config.providers[provider]&&!initializing;

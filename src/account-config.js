@@ -2,5 +2,5 @@
 export const accountConfig = {
   url: 'https://zfsedjblvipnuztzdrbb.supabase.co',
   publishableKey: 'sb_publishable_0GHERs017OAjckYV38sVmg_jWyykpAZ',
-  providers: {google: false, apple: false}
+  providers: {google: true, apple: false}
 };

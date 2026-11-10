@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-La interfaz, los adaptadores OAuth y las bibliotecas locales separadas por identificador de usuario están implementados. Los accesos siguen desactivados hasta conectar un proyecto y habilitar cada proveedor. No se ha simulado ningún inicio de sesión. El modo local conserva su clave y sus datos anteriores.
+La interfaz, los adaptadores OAuth y las bibliotecas locales separadas por identificador de usuario están implementados. El proyecto Supabase ya está conectado y Google está activado con credenciales reales. Apple permanece desactivado. No se ha simulado ningún inicio de sesión. El modo local conserva su clave y sus datos anteriores.
 
 La sincronización de la biblioteca entre dispositivos todavía no está implementada. Iniciar sesión no equivale a sincronizar: cada cuenta tiene un espacio local independiente en este navegador. No hay subida automática de la biblioteca sin cuenta.
 
@@ -55,5 +55,15 @@ GitHub Actions repite instalación, pruebas, compilación y publicación en cada
 
 ## Proyecto conectado
 
-Proyecto Supabase PanelVerse creado por el propietario, región eu-north-1 (Estocolmo). URL pública configurada: https://zfsedjblvipnuztzdrbb.supabase.co . Se utiliza exclusivamente su clave publishable. El endpoint público de configuración ha respondido correctamente: Google y Apple siguen desactivados por falta de sus credenciales OAuth. No se ha probado aún un inicio de sesión real. Sitio publicado en https://guillermogarcia137.github.io/panelverse/ .
+Proyecto Supabase PanelVerse creado por el propietario, región eu-north-1 (Estocolmo). URL pública configurada: https://zfsedjblvipnuztzdrbb.supabase.co . Se utiliza exclusivamente su clave publishable. El endpoint público de configuración confirma Google activado y Apple desactivado. Se ha probado un inicio de sesión real con Google, el retorno OAuth, la persistencia al recargar y el cierre de sesión en localhost. Al salir se recupera la biblioteca sin cuenta sin perder sus datos. Sitio publicado en https://guillermogarcia137.github.io/panelverse/ .
 
+
+## Configuración de Google preparada
+
+Proyecto de Google Cloud: `panelverse-514322` (PanelVerse). Pantalla de consentimiento creada para usuarios externos. Cliente web creado como `PanelVerse Web`, con estos valores:
+
+- Origen público: `https://guillermogarcia137.github.io`
+- Origen local: `http://localhost:4173`
+- Callback OAuth: `https://zfsedjblvipnuztzdrbb.supabase.co/auth/v1/callback`
+
+Supabase tiene guardados el Site URL público y las dos URL de retorno de la aplicación, sin comodines. El propietario genera y guarda el Client ID y Client Secret directamente en Supabase; no se copian a este repositorio. La activación del proveedor y el retorno real se han confirmado; `providers.google` está activado. La autorización solicita únicamente correo y perfil básico. La pantalla de Google puede mostrar el dominio del proyecto Supabase.

@@ -1,4 +1,4 @@
-const CACHE='panelverse-v5-accounts';
+const CACHE='panelverse-v5-google';
 const BASE=new URL('./',self.location.href);
 const SHELL=['./','./index.html','./src/app.js','./src/model.js','./src/styles.css','./src/account.css','./src/account.js','./src/account-config.js','./src/account-model.js','./src/vendor/account-client.js','./src/theme.js','./src/theme-catalog.js','./src/themes.css','./assets/icon.svg','./assets/icon-192.png','./assets/icon-512.png','./assets/superman.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL.map(path=>new URL(path,BASE).href))));});

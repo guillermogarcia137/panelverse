@@ -46,7 +46,7 @@ También están definidos `npm start`, `npm test` y `npm run build` cuando npm e
 
 ## Arquitectura
 
-Esta versión usa HTML, CSS y módulos JavaScript nativos para poder ejecutarse sin instalar dependencias. React, TypeScript y Supabase se propusieron inicialmente; quedan como opciones para una siguiente etapa si la complejidad y la sincronización lo justifican.
+La interfaz utiliza HTML, CSS y módulos JavaScript nativos. La compilación empaqueta el SDK oficial de Supabase para el acceso opcional a cuentas. La biblioteca se guarda localmente; la sincronización entre dispositivos aún no está implementada.
 
 | Archivo | Responsabilidad |
 | --- | --- |
@@ -98,3 +98,9 @@ La paleta ampliada abre 42 temas permanentes con miniaturas y búsqueda. Incluye
 
 Documentación y repositorio accesibles desde el lateral y el pie (también en móvil). Pantalla de Cuenta con proveedores Google y Apple preparados, desactivados hasta configurar el servicio real. Bibliotecas locales separadas por usuario sin migración automática ni sincronización en la nube. Estado de activación y guía completa en ACCOUNTS.md.
 
+
+## Acceso con Google (v0.5.1)
+
+Google está activado mediante Supabase Auth. Se han comprobado en localhost el acceso real, el retorno OAuth con PKCE, la persistencia tras recargar y el cierre de sesión. La biblioteca sin cuenta se recupera al salir y permanece separada de la cuenta. El inicio de sesión no sincroniza la biblioteca entre dispositivos. Apple sigue pendiente de configuración.
+
+Las credenciales OAuth las ha guardado el propietario directamente en Supabase. El repositorio solo incluye la URL y clave publishable públicas. Guía y direcciones en ACCOUNTS.md.
