@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101211"><meta name="description" content="Tu biblioteca personal de cómics. Organiza tus series y retoma la lectura.">
+  <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./assets/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./assets/icon-192.png">
+  <link rel="stylesheet" href="./src/styles.css"><title>PanelVerse · Tu biblioteca</title>
+</head>
+<body>
+  <a class="skip" href="#library">Saltar a la biblioteca</a>
+  <aside class="sidebar">
+    <a class="brand" href="./" aria-label="PanelVerse, inicio"><span class="brand-icon">P<span>V</span></span><span>PanelVerse<small>TU UNIVERSO DE VIÑETAS</small></span></a>
+    <p class="nav-label">TU ESPACIO</p>
+    <nav aria-label="Biblioteca" id="navigation">
+      <button data-filter="all" class="nav-item active"><span>▦</span> Mi biblioteca <b id="count-all">0</b></button>
+      <button data-filter="reading" class="nav-item"><span>◉</span> Leyendo <b id="count-reading">0</b></button>
+      <button data-filter="pending" class="nav-item"><span>◷</span> Pendientes <b id="count-pending">0</b></button>
+      <button data-filter="finished" class="nav-item"><span>✓</span> Terminados <b id="count-finished">0</b></button>
+    </nav>
+    <div class="sidebar-bottom"><span class="local-dot"></span> Biblioteca en este dispositivo<p>Tu progreso, a tu ritmo.</p><button class="text-button" id="help-button">Cómo funciona ↗</button></div>
+  </aside>
+  <main>
+    <header class="topbar"><span class="eyebrow">MI COLECCIÓN PERSONAL</span><div class="top-actions"><span id="connection">LOCAL · SIN CUENTA</span><button class="quiet" id="backup-button">Copias de seguridad</button></div></header>
+    <section class="intro"><div><p class="eyebrow accent">CADA HISTORIA, EN SU SITIO</p><h1>Tu próxima página<br>empieza aquí<span>.</span></h1><p>Todos tus universos. Una sola biblioteca.</p></div><button class="primary" id="add-button">＋ Añadir serie</button></section>
+    <section id="resume" aria-label="Retomar lectura"></section>
+    <section id="library" aria-labelledby="library-title">
+      <div class="section-heading"><div><p class="eyebrow">LA ESTANTERÍA</p><h2 id="library-title">Mi biblioteca <span id="visible-count"></span></h2></div><div class="tools"><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar una serie…" aria-label="Buscar una serie"></label><label><span class="sr-only">Ordenar biblioteca</span><select id="sort"><option value="recent">Actividad reciente</option><option value="title">Título: A–Z</option><option value="progress">Más leídos</option></select></label></div></div>
+      <div id="grid" class="grid"></div>
+    </section>
+    <footer><span>PanelVerse <small>v0.1 · Primer capítulo</small></span><span>Las buenas historias merecen un lugar.</span></footer>
+  </main>
+  <dialog id="editor"><form id="series-form"><div class="dialog-heading"><div><p class="eyebrow">TU BIBLIOTECA</p><h2 id="editor-title">Añadir serie</h2></div><button class="icon-button" type="button" data-close aria-label="Cerrar">×</button></div>
+    <input name="id" type="hidden">
+    <label>Título<input name="title" required maxlength="120" placeholder="Ej. Superman (2023)"></label>
+    <div class="form-row"><label>Editorial<input name="publisher" maxlength="60" placeholder="Ej. DC Comics"></label><label>Estado<select name="status"><option value="pending">Pendiente</option><option value="reading">Leyendo</option><option value="finished">Terminado</option></select></label></div>
+    <div class="form-row"><label>Último número leído<input name="lastRead" type="number" min="0" max="99999" step="1" value="0" required></label><label>Total de números (opcional)<input name="total" type="number" min="1" max="99999" step="1" placeholder="Serie abierta"></label></div>
+    <label>Enlace para continuar leyendo<input name="url" type="url" required maxlength="2000" placeholder="https://marmota.me/comic/…"></label>
+    <p class="field-hint">Se abre el enlace exacto que guardes. Actualízalo cuando cambies de número.</p>
+    <label>URL de la portada (opcional)<input name="cover" type="url" maxlength="2000" placeholder="https://…/portada.jpg"></label>
+    <label>Notas<textarea name="notes" rows="3" maxlength="2000" placeholder="Tu próxima lectura, un arco favorito…"></textarea></label>
+    <p id="form-error" class="error" role="alert"></p><div class="dialog-actions"><button type="button" class="quiet" data-close>Cancelar</button><button type="submit" class="primary">Guardar serie</button></div>
+  </form></dialog>
+  <dialog id="details"></dialog>
+  <dialog id="backup"><div class="dialog-heading"><h2>Tu biblioteca, a salvo</h2><button class="icon-button" data-close aria-label="Cerrar">×</button></div><p>Los datos se guardan en este navegador. Exporta una copia antes de cambiar de dispositivo o borrar sus datos.</p><button class="primary wide" id="export-button">↓ Exportar biblioteca (.json)</button><hr><h3>Importar una copia</h3><p>Las series con el mismo identificador se actualizarán. Las demás se añadirán. Antes de importar se descarga una copia de tu biblioteca actual.</p><label class="quiet file-label">↑ Elegir archivo JSON<input id="import-file" type="file" accept="application/json,.json"></label><p id="import-result" role="status"></p></dialog>
+  <dialog id="help"><div class="dialog-heading"><h2>Bienvenido a PanelVerse</h2><button class="icon-button" data-close aria-label="Cerrar">×</button></div><p>Tu estantería para organizar las historias que lees online.</p><ol><li>Añade una serie con su enlace y, si quieres, una portada.</li><li>Abre «Continuar leyendo» para visitar la página guardada.</li><li>Al volver, pulsa «+1 leído» o edita el último número leído.</li><li>Exporta una copia para conservar tu biblioteca.</li></ol><p>El ejemplo de Superman empieza en cero: no representa tu progreso real. El enlace apunta al #35 como referencia.</p><p>Esta versión no sincroniza dispositivos ni descarga cómics. La biblioteca funciona sin conexión después de la primera visita; los enlaces y portadas externas necesitan Internet.</p><p>En iPad, una vez publicada con HTTPS: Safari → Compartir → Añadir a pantalla de inicio.</p></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./src/app.js"></script>
+</body></html>

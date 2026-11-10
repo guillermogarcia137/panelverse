@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {seed,validateSeries,parseBackup,mergeSeries,advance,selectSeries} from '../src/model.js';
+test('el ejemplo es válido y no atribuye progreso al usuario',()=>{assert.equal(validateSeries(seed[0]).lastRead,0);});
+test('rechaza protocolos ejecutables y credenciales',()=>{for(const url of ['javascript:alert(1)','data:text/html,x','https://user:pass@example.com'])assert.throws(()=>validateSeries({...seed[0],url}));});
+test('el progreso respeta el total y termina la serie',()=>{const result=advance({...seed[0],lastRead:4,total:5});assert.equal(result.lastRead,5);assert.equal(result.status,'finished');assert.equal(advance(result).lastRead,5);});
+test('no permite números inválidos ni total menor que progreso',()=>{for(const lastRead of [-1,1.5,100000])assert.throws(()=>validateSeries({...seed[0],lastRead}));assert.throws(()=>validateSeries({...seed[0],lastRead:5,total:4}));});
+test('valida toda la importación antes de fusionar',()=>{assert.throws(()=>parseBackup(JSON.stringify({version:1,series:[seed[0],{title:'inválido'}]})));assert.throws(()=>parseBackup(JSON.stringify({version:2,series:[]})));assert.throws(()=>parseBackup(JSON.stringify({version:1,series:[seed[0],seed[0]]})));});
+test('fusiona por id, actualiza coincidencias y conserva las otras series',()=>{const other={...seed[0],id:'otra'};const merged=mergeSeries([seed[0],other],[{...seed[0],lastRead:10}]);assert.equal(merged.length,2);assert.equal(merged[0].lastRead,10);assert.equal(merged[1].id,'otra');});
+test('búsqueda ignora acentos y mayúsculas y aplica estado',()=>{const data=[{...seed[0],title:'Héroes',status:'reading'}];assert.equal(selectSeries(data,'reading','HEROES').length,1);assert.equal(selectSeries(data,'finished','heroes').length,0);});
