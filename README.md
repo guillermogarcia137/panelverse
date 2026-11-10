@@ -75,3 +75,8 @@ Alta, edición, borrado confirmado, progreso, finalización y persistencia al re
 
 Documentación: https://app.notion.com/p/414453bf2fd881f481e8f77ef55ed480
 
+
+## Navy edition (v0.2)
+
+Rediseño navy y azul, con detalles de puntos, tipografía de sistema y etiquetas monoespaciadas. Prioridad visual: Nothing, Apple, Omarchy, Nate Gentile y MoureDev. La paleta y criterios se documentan en DESIGN.md. Se conservan las funciones y los datos de la primera versión. Revisión visual de escritorio, móvil (390 x 844) e iPad simulado (1024 x 1366), incluyendo formulario móvil y ausencia de desbordamientos horizontales.
+

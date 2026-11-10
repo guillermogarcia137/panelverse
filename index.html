@@ -2,32 +2,36 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#101211"><meta name="description" content="Tu biblioteca personal de cómics. Organiza tus series y retoma la lectura.">
+  <meta name="theme-color" content="#080f20"><meta name="description" content="Tu biblioteca personal de cómics. Organiza tus series y retoma la lectura.">
   <link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./assets/icon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="./assets/icon-192.png">
   <link rel="stylesheet" href="./src/styles.css"><title>PanelVerse · Tu biblioteca</title>
 </head>
 <body>
   <a class="skip" href="#library">Saltar a la biblioteca</a>
   <aside class="sidebar">
-    <a class="brand" href="./" aria-label="PanelVerse, inicio"><span class="brand-icon">P<span>V</span></span><span>PanelVerse<small>TU UNIVERSO DE VIÑETAS</small></span></a>
+    <a class="brand" href="./" aria-label="PanelVerse, inicio"><span class="brand-icon">P<span>V</span></span><span>PanelVerse<small>PERSONAL COMIC ARCHIVE</small></span></a>
     <p class="nav-label">TU ESPACIO</p>
     <nav aria-label="Biblioteca" id="navigation">
-      <button data-filter="all" class="nav-item active"><span>▦</span> Mi biblioteca <b id="count-all">0</b></button>
-      <button data-filter="reading" class="nav-item"><span>◉</span> Leyendo <b id="count-reading">0</b></button>
-      <button data-filter="pending" class="nav-item"><span>◷</span> Pendientes <b id="count-pending">0</b></button>
-      <button data-filter="finished" class="nav-item"><span>✓</span> Terminados <b id="count-finished">0</b></button>
+      <button data-filter="all" class="nav-item active"><span>01</span> Mi biblioteca <b id="count-all">0</b></button>
+      <button data-filter="reading" class="nav-item"><span>02</span> Leyendo <b id="count-reading">0</b></button>
+      <button data-filter="pending" class="nav-item"><span>03</span> Pendientes <b id="count-pending">0</b></button>
+      <button data-filter="finished" class="nav-item"><span>04</span> Terminados <b id="count-finished">0</b></button>
     </nav>
     <div class="sidebar-bottom"><span class="local-dot"></span> Biblioteca en este dispositivo<p>Tu progreso, a tu ritmo.</p><button class="text-button" id="help-button">Cómo funciona ↗</button></div>
   </aside>
   <main>
-    <header class="topbar"><span class="eyebrow">MI COLECCIÓN PERSONAL</span><div class="top-actions"><span id="connection">LOCAL · SIN CUENTA</span><button class="quiet" id="backup-button">Copias de seguridad</button></div></header>
-    <section class="intro"><div><p class="eyebrow accent">CADA HISTORIA, EN SU SITIO</p><h1>Tu próxima página<br>empieza aquí<span>.</span></h1><p>Todos tus universos. Una sola biblioteca.</p></div><button class="primary" id="add-button">＋ Añadir serie</button></section>
+    <header class="topbar"><span class="eyebrow">MI COLECCIÓN</span><div class="top-actions"><span id="connection">LOCAL · SIN CUENTA</span><button class="quiet" id="backup-button">Copias de seguridad</button></div></header>
+    <section class="intro">
+      <div class="intro-copy"><p class="eyebrow accent">TU UNIVERSO DE HISTORIAS / VOL. 01</p><h1><span class="dot-word">Tu universo.</span><br>Viñeta a viñeta<span class="title-period">.</span></h1><p>Historias que te acompañan.<br>Un lugar al que siempre volver.</p><div class="intro-actions"><button class="primary" id="add-button">Añadir serie <span aria-hidden="true">＋</span></button><small>TU COLECCIÓN.<br>A TU RITMO.</small></div></div>
+      <div class="hero-glyph" aria-hidden="true"><span class="glyph-label">PV — ARCHIVO PERSONAL</span><svg viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="150" cy="150" r="116" stroke="#2d466a" stroke-dasharray="2 7"/><circle cx="150" cy="150" r="96" stroke="#436999" stroke-width="1"/><path d="M150 54a96 96 0 0 1 96 96" stroke="#c3dbff" stroke-width="4" stroke-linecap="round"/><path d="M150 246a96 96 0 0 1-96-96" stroke="#609eff" stroke-width="4" stroke-linecap="round"/><rect x="100" y="87" width="101" height="128" rx="13" transform="rotate(14 100 87)" fill="#122d50" stroke="#3a6092"/><rect x="90" y="82" width="106" height="132" rx="13" fill="#0a152a" stroke="#84aff2" stroke-width="1.5"/><path d="M106 102h74v48h-74zM106 160h31v35h-31zM147 160h33v35h-33z" stroke="#a7c9fc" stroke-width="2" stroke-linejoin="round"/><path d="m110 142 20-24 16 15 16-20 14 12" stroke="#508bdf" stroke-width="2"/><circle cx="68" cy="73" r="5" fill="#73a8ff"/><circle cx="248" cy="192" r="4" fill="#e5eeff"/><path d="M35 150h15M250 150h15M150 35v15M150 250v15" stroke="#6f8eb8"/><circle cx="150" cy="150" r="135" stroke="#324a6d" stroke-dasharray="35 180 2 140"/></svg><div class="glyph-caption"><span>UNA VIÑETA MÁS.</span><span>( PV / 01 )</span></div></div>
+    </section>
+
     <section id="resume" aria-label="Retomar lectura"></section>
     <section id="library" aria-labelledby="library-title">
       <div class="section-heading"><div><p class="eyebrow">LA ESTANTERÍA</p><h2 id="library-title">Mi biblioteca <span id="visible-count"></span></h2></div><div class="tools"><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="Buscar una serie…" aria-label="Buscar una serie"></label><label><span class="sr-only">Ordenar biblioteca</span><select id="sort"><option value="recent">Actividad reciente</option><option value="title">Título: A–Z</option><option value="progress">Más leídos</option></select></label></div></div>
       <div id="grid" class="grid"></div>
     </section>
-    <footer><span>PanelVerse <small>v0.1 · Primer capítulo</small></span><span>Las buenas historias merecen un lugar.</span></footer>
+    <footer><span>PanelVerse <small>v0.2 / Navy edition</small></span><span>Las buenas historias merecen un lugar.</span></footer>
   </main>
   <dialog id="editor"><form id="series-form"><div class="dialog-heading"><div><p class="eyebrow">TU BIBLIOTECA</p><h2 id="editor-title">Añadir serie</h2></div><button class="icon-button" type="button" data-close aria-label="Cerrar">×</button></div>
     <input name="id" type="hidden">
