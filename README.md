@@ -3,7 +3,7 @@
 Aplicación publicada: https://guillermogarcia137.github.io/panelverse/
 
 
-Biblioteca personal de cómics con enlaces externos y seguimiento manual de lectura. Con Google, biblioteca privada sincronizada entre dispositivos; sin cuenta, biblioteca local independiente. Incluye 42 temas y copias de seguridad JSON.
+Biblioteca personal de cómics con seguimiento de series y lector integrado de CBR/CBZ, archivos locales y carpeta de Google Drive. Con Google, biblioteca privada sincronizada entre dispositivos; sin cuenta, biblioteca local independiente. Incluye 42 temas y copias de seguridad JSON.
 
 ## Probar en local
 
@@ -32,7 +32,7 @@ Con cuenta, iniciar sesión con el mismo Google recupera la biblioteca de Supaba
 
 La cuenta de Google utiliza Supabase y una copia local transaccional en IndexedDB. Los cambios se sincronizan automáticamente; los cambios sin conexión quedan pendientes. La biblioteca sin cuenta permanece en `localStorage`, clave `panelverse.library.v1`. No hay analítica. Exporta copias periódicas. El máximo es 2000 series; una importación admite hasta 5 MB. La importación actualiza los mismos identificadores y añade los demás. Antes se descarga una copia del estado actual. Comprueba que tu navegador permita la descarga.
 
-La aplicación no lee el progreso de Marmota, no descarga cómics y no calcula URLs del siguiente número. Solo guarda y abre los enlaces que añadas. No hay integración con Panels/PanelBridge.
+La biblioteca de series no lee el progreso de Marmota ni calcula URLs del siguiente número. La nueva pestaña Lector permite leer archivos CBR/CBZ propios y descargar para lectura offline desde la carpeta de Drive elegida. No hay integración con Panels/PanelBridge. Uso, autorización y límites en [READER.md](READER.md).
 
 ## Desarrollo y comprobaciones
 
@@ -109,3 +109,6 @@ Las credenciales OAuth las ha guardado el propietario directamente en Supabase. 
 Sincronización privada por cuenta, guardado sin conexión con reintentos, resolución de conflictos y copia de la biblioteca sin cuenta. La web y localhost usan la misma biblioteca cuando se inicia sesión con la misma cuenta. El estado indica cuándo los datos están pendientes o confirmados en la nube.
 
 Migración y pruebas de seguridad en `supabase/`; arquitectura, límites y uso en [SYNC.md](SYNC.md). La verificación SQL ha pasado en Supabase real. IndexedDB real ha superado las comprobaciones de escrituras concurrentes, persistencia de la cola y reintentos sin duplicados. La prueba en un iPad físico sigue pendiente.
+## Lector y Drive (v0.7)
+
+Sala de lectura con importación múltiple CBR/CBZ, carpeta de Google Drive con subcarpetas, descarga al abrir y lectura sin conexión. Página simple/doble/vertical, manga, zoom, marcadores, favoritos, colecciones y progreso por página. El catálogo se actualiza mientras la aplicación está abierta; el progreso por página y las descargas se guardan por cuenta en este navegador, independientes del progreso de series sincronizado con Supabase. [Guía, configuración de Drive y pruebas](READER.md).

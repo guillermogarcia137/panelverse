@@ -1,3 +1,4 @@
+import {initializeReader} from './reader.js';
 import {STORAGE_KEY,statuses,seed,validateSeries,parseBackup,mergeSeries,advance,selectSeries} from './model.js';
 import {initializeAccount,getAccountClient} from './account.js';
 import {accountStorageKey} from './account-model.js';
@@ -102,4 +103,5 @@ $('#upload-local').addEventListener('click',async()=>{
     if(await save(mergeSeries(guest,series)))toast('Biblioteca copiada a tu cuenta. Los cambios se sincronizarán cuando haya conexión.');
   }catch(error){toast(error.message);}
 });
+initializeReader();
 initializeAccount().catch(()=>toast('El acceso de cuentas no está disponible.'));

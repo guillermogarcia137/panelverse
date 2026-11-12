@@ -34,6 +34,7 @@ function setUser(next){
   renderAccount();
   if(changed)window.dispatchEvent(new CustomEvent('panelverse:account-changed',{detail:{userId:user?.id??null}}));
 }
+function readerSession(session){window.dispatchEvent(new CustomEvent('panelverse:auth-session',{detail:{token:session?.provider_token||null}}));}
 function cleanCallback(){const url=new URL(location.href);let changed=false;for(const key of ['code','error','error_code','error_description'])if(url.searchParams.has(key)){url.searchParams.delete(key);changed=true;}if(changed)history.replaceState(null,'',url.pathname+url.search+url.hash);}
 export async function initializeAccount(){
   window.addEventListener('panelverse:sync-state',event=>{syncInfo=event.detail;renderAccount();});
@@ -63,8 +64,9 @@ export async function initializeAccount(){
     const {data,error}=await client.auth.getSession();if(error)throw error;
     if(data.session){const result=await client.auth.getUser();if(result.error){if(!retryable(result.error))throw result.error;const previous=previousAccount();setUser(previous?.id===data.session.user.id?previous:data.session.user);}else setUser(result.data.user);}
     else if(navigator.onLine===false&&previousAccount())setUser(previousAccount());
+    readerSession(data.session);
     cleanCallback();
-    client.auth.onAuthStateChange((event,session)=>{if(!session&&navigator.onLine===false&&event!=='SIGNED_OUT'&&user)return;setUser(session?.user??null);});
+    client.auth.onAuthStateChange((event,session)=>{if(!session&&navigator.onLine===false&&event!=='SIGNED_OUT'&&user)return;setUser(session?.user??null);if(session?.provider_token||!session)readerSession(session);});
   }catch(error){if(retryable(error)&&previousAccount()){setUser(previousAccount());client?.auth.onAuthStateChange((event,session)=>{if(session)setUser(session.user);else if(event==='SIGNED_OUT')setUser(null);});$('#account-message').textContent='Usando la última cuenta de este navegador sin conexión. La nube volverá a verificar la sesión antes de aceptar cambios.';}else{client=null;setUser(null);$('#account-message').textContent='No se ha podido comprobar tu cuenta. Puedes seguir con la biblioteca sin cuenta.';}cleanCallback();}
   finally{initializing=false;renderAccount();}
 }
