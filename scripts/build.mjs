@@ -5,6 +5,12 @@ import {fileURLToPath} from 'node:url';
 const root=new URL('../',import.meta.url),dist=new URL('../dist/',import.meta.url);
 await mkdir(new URL('src/vendor/',root),{recursive:true});
 await build({entryPoints:[fileURLToPath(new URL('src/account-client-entry.js',root))],outfile:fileURLToPath(new URL('src/vendor/account-client.js',root)),bundle:true,format:'esm',platform:'browser',minify:true,legalComments:'eof'});
+
+await build({entryPoints:[fileURLToPath(new URL('src/reader-codecs-entry.js',root))],outfile:fileURLToPath(new URL('src/vendor/reader-codecs.js',root)),bundle:true,format:'esm',platform:'browser',minify:true,legalComments:'eof'});
+await cp(new URL('node_modules/node-unrar-js/esm/js/unrar.wasm',root),new URL('src/vendor/unrar.wasm',root));
+await cp(new URL('node_modules/node-unrar-js/LICENSE.md',root),new URL('src/vendor/UNRAR-JS-LICENSE.txt',root));
+await cp(new URL('node_modules/@zip.js/zip.js/LICENSE',root),new URL('src/vendor/ZIP-JS-LICENSE.txt',root));
+
 async function files(path,prefix=''){
   const entries=await readdir(path,{withFileTypes:true});let result=[];
   for(const entry of entries)result.push(...(entry.isDirectory()?await files(new URL(entry.name+'/',path),prefix+entry.name+'/'):[prefix+entry.name]));
