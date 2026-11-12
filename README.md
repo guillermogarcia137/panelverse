@@ -116,3 +116,7 @@ Sala de lectura con importación múltiple CBR/CBZ, carpeta de Google Drive con 
 ## Lectura web conectada (v0.8)
 
 Contenedor para enlaces de series y puente instalable por dominio para lectores de imágenes compatibles, incluidos Madara/Marmota. Guarda página, capítulo completado y el siguiente enlace observado en la biblioteca existente. Incluye pestaña conectada como alternativa cuando una web bloquea los marcos. Requiere instalar el puente en el navegador; otras estructuras necesitan un adaptador y Safari físico sigue pendiente de verificación. [Investigación, instalación y límites](WEB-READING.md).
+
+## Series con archivos (v0.9)
+
+La biblioteca principal permite crear series de tipo Web o Archivos CBR/CBZ. Una serie puede agrupar números importados o vinculados desde Lector/Drive, reanudar su página y actualizar su progreso al terminar cada número. El lector independiente permanece en su pestaña y utiliza los mismos archivos, sin duplicarlos. [Uso, sincronización y límites](SERIES-FILES.md).
