@@ -21,9 +21,16 @@ page.on("pageerror", (error) => errors.push(error.message));
 page.on("crash", () => console.log("Browser page crashed"));
 page.setDefaultTimeout(15000);
 await page.route("https://*.supabase.co/**", (route) => route.abort());
+await page.addInitScript(() => {
+  if (!sessionStorage.getItem("reader-test-started")) {
+    sessionStorage.setItem("panelverse.reader-return", "1");
+    sessionStorage.setItem("reader-test-started", "1");
+  }
+});
 await page.goto(
   process.env.READER_TEST_URL || "http://localhost:4173/panelverse/",
 );
+await page.locator("#reading-library").waitFor({ state: "visible" });
 await page.locator("#reader-nav").click();
 await page.locator("#reader-files").setInputFiles([
   { name: "Prueba CBZ.cbz", mimeType: "application/zip", buffer: cbz },

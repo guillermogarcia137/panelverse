@@ -308,10 +308,11 @@ async function connect() {
       throw new Error(
         "El servicio de cuentas aún no está disponible. Prueba desde Cuenta.",
       );
+    sessionStorage.setItem("panelverse.reader-return", "1");
     const { error } = await client.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: new URL("../", import.meta.url).href + "#reading",
+        redirectTo: new URL("../", import.meta.url).href,
         scopes: DRIVE_SCOPE,
         queryParams: { prompt: "consent", include_granted_scopes: "true" },
       },
@@ -824,6 +825,8 @@ export function initializeReader() {
   window.addEventListener("hashchange", () => {
     if (location.hash === "#reading") viewReader();
   });
-  if (location.hash === "#reading") viewReader();
+  const returning = sessionStorage.getItem("panelverse.reader-return");
+  sessionStorage.removeItem("panelverse.reader-return");
+  if (location.hash === "#reading" || returning) viewReader();
   load();
 }
