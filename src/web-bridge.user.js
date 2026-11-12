@@ -31,6 +31,7 @@
     ".reader-pages img",
     ".reading-content img",
   ];
+  // Busca imágenes con selectores habituales de lectores de cómics. Cada web puede necesitar adaptar estos selectores.
   function pages() {
     for (const selector of selectors) {
       const images = [...document.querySelectorAll(selector)].filter(
@@ -40,11 +41,13 @@
     }
     return [];
   }
+  // Limpia parámetros internos antes de enviar la dirección actual a PanelVerse.
   function clean(value) {
     const url = new URL(value, location.href);
     url.searchParams.delete("panelversePage");
     return url.href;
   }
+  // Intenta reconocer el número del capítulo sin confundirlo con cualquier cifra de la dirección.
   function chapterNumber() {
     const selected = document.querySelector(
       ".chapter-selection select option:checked,select.selectpicker_chapter option:checked",
@@ -61,6 +64,7 @@
     const match = slug.match(/(?:^|[-_])(?:chapter[-_]|capitulo[-_])?(\d+)$/i);
     return match && Number(match[1]) <= 99999 ? Number(match[1]) : null;
   }
+  // Localiza el enlace real al capítulo siguiente; no construye una dirección suponiendo cómo funciona la web.
   function nextLink() {
     const link = document.querySelector(
       'a.next_page:not(.disabled),a[rel="next"],.chapter-nav a.next,.reader-navigation a.next',
@@ -75,6 +79,7 @@
       return null;
     }
   }
+  // Solo envía datos al origen de PanelVerse autorizado durante el saludo de esta sesión.
   function send(data) {
     if (connection)
       connection.target.postMessage(
@@ -82,6 +87,7 @@
         connection.origin,
       );
   }
+  // Calcula qué página visible ya está cargada para informar del avance real, no solo del desplazamiento.
   function report() {
     if (!connection || restoring || document.hidden) return;
     const images = pages();
@@ -135,10 +141,12 @@
       send(payload);
     }
   }
+  // Agrupa muchos eventos de scroll en una actualización aplazada para no guardar en cada píxel de movimiento.
   function schedule() {
     clearTimeout(timer);
     timer = setTimeout(report, 450);
   }
+  // Espera a que aparezcan las imágenes y vuelve a la página guardada, incluidas las de carga diferida.
   async function restore(resume) {
     const images = pages();
     if (!resume || clean(resume.url) !== clean(location.href) || !images.length)

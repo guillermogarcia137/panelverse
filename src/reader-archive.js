@@ -6,11 +6,14 @@ import {
   naturalOrder,
 } from "./reader-model.js";
 let rarQueue = Promise.resolve();
+// El extractor RAR comparte un módulo WebAssembly; encadenamos sus tareas para que no se pisen entre sí.
 function withRar(action) {
   const result = rarQueue.then(action);
   rarQueue = result.catch(() => {});
   return result;
 }
+// Detecta ZIP/CBZ o RAR/CBR por su cabecera y enumera imágenes sin extraer todo el cómic de una vez.
+// Devuelve un lector que extrae cada página cuando hace falta, respetando los límites de tamaño.
 export async function openArchive(blob, name, { codecs, wasmBinary } = {}) {
   if (!blob.size || blob.size > MAX_ARCHIVE)
     throw new Error("El archivo está vacío o supera el límite de 250 MB.");
@@ -117,6 +120,7 @@ export async function openArchive(blob, name, { codecs, wasmBinary } = {}) {
     },
   };
 }
+// Indica al navegador el tipo de imagen extraída para crear el Blob con el formato adecuado.
 function imageType(name) {
   return (
     "image/" +

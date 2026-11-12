@@ -1,5 +1,6 @@
 import { isComic, MAX_ARCHIVE } from "./reader-model.js";
 export const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+// Agrupa el acceso de solo lectura a Drive. fetcher permite probar la API con respuestas simuladas sin conectarse a Google.
 export class DriveClient {
   constructor(
     token,
@@ -8,6 +9,7 @@ export class DriveClient {
     this.token = token;
     this.fetcher = fetcher;
   }
+  // Construye la petición GET y añade el permiso temporal en la cabecera, no en el enlace que se muestra o guarda.
   async request(path, params = {}, signal) {
     const url = new URL("https://www.googleapis.com/drive/v3/" + path);
     for (const [key, value] of Object.entries(params))
@@ -31,6 +33,7 @@ export class DriveClient {
     }
     return response;
   }
+  // Drive devuelve resultados por páginas: repetimos la petición con nextPageToken hasta completar la carpeta.
   async children(parent, { foldersOnly = false, signal } = {}) {
     const files = [];
     let pageToken = "";
@@ -53,6 +56,7 @@ export class DriveClient {
     } while (pageToken);
     return files;
   }
+  // Recorre subcarpetas con una cola y evita visitar la misma carpeta dos veces. Solo añade archivos CBR o CBZ al catálogo.
   async scan(root, { recursive = true, signal } = {}) {
     const queue = [{ id: root, path: "" }],
       seen = new Set(),
@@ -83,6 +87,7 @@ export class DriveClient {
     }
     return files;
   }
+  // Lee la respuesta por fragmentos y comprueba el tamaño acumulado, incluso si el servidor no envía content-length.
   async download(book, signal) {
     if (book.size > MAX_ARCHIVE)
       throw new Error("Este cómic supera el límite de 250 MB.");

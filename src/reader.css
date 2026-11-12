@@ -1,3 +1,4 @@
+/* Diseño del lector de archivos: catálogo, controles y modos de página. Los colores se heredan del tema mediante variables CSS. */
 [hidden] {
   display: none !important;
 }

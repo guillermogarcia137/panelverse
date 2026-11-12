@@ -16,6 +16,7 @@ const esc = (value) =>
         c
       ],
   );
+// Une la biblioteca de series con el lector independiente reutilizando sus archivos, sin copiar el contenido binario.
 export function initializeSeriesFiles({
   reader,
   getSeries,
@@ -33,12 +34,14 @@ export function initializeSeriesFiles({
     working = false;
   const get = (id) => getSeries().find((s) => s.id === id);
   const linked = (id) => seriesBooks(reader.getBooks(), id);
+  // Produce el resumen de números descargados y de la página pendiente de una serie.
   function summary(series) {
     const list = linked(series.id),
       info = fileSeriesInfo(series);
     const current = list.find((b) => b.id === info?.book);
     return `${list.length} número${list.length === 1 ? "" : "s"} en este dispositivo${info?.book ? ` · #${info.issue} · página ${info.page + 1}${current?.pages ? " / " + current.pages : ""}` : ""}`;
   }
+  // Añade portadas locales a las tarjetas de series una vez que app.js ha construido el HTML.
   function decorate() {
     coverUrls.forEach((url) => URL.revokeObjectURL(url));
     coverUrls = [];
@@ -69,6 +72,7 @@ export function initializeSeriesFiles({
       queueMicrotask(() => manage(id));
     }
   }
+  // Rellena el diálogo de números de la serie con los archivos vinculados y sus controles.
   function drawManage() {
     const series = get(managing);
     if (!series || !$("#series-issues").open) return;
@@ -84,6 +88,7 @@ export function initializeSeriesFiles({
           .join("")
       : '<div class="empty"><h3>Añade los números de esta serie</h3><p>Importa varios CBR/CBZ o vincula los que ya tienes en el lector y en Drive. Los archivos permanecen también en el Lector.</p></div>';
   }
+  // Repinta la biblioteca y sus números; si la URL señala una serie existente, abre su gestión una sola vez.
   function refresh() {
     renderLibrary();
     drawManage();
@@ -93,6 +98,7 @@ export function initializeSeriesFiles({
       manage(id);
     }
   }
+  // Abre la gestión de números para una serie concreta de la biblioteca actual.
   function manage(id) {
     if (!get(id)) return;
     managing = id;
@@ -100,6 +106,7 @@ export function initializeSeriesFiles({
     if (!$("#series-issues").open) $("#series-issues").showModal();
     drawManage();
   }
+  // Comprueba la serie y pide al lector que abra el archivo y la página de reanudación adecuados.
   async function play(id, bookId = null) {
     const series = get(id);
     if (!series) return;
@@ -119,6 +126,7 @@ export function initializeSeriesFiles({
           : null;
     await reader.openBook(book.id, { resumePage });
   }
+  // Prepara el diálogo que permite asignar archivos del lector a una serie existente.
   function attach(bookId = null, target = managing) {
     selection = bookId ? [bookId] : [];
     const series = getSeries();
@@ -132,6 +140,7 @@ export function initializeSeriesFiles({
     drawAttach();
     $("#file-attach").showModal();
   }
+  // Muestra los archivos disponibles para vincular, respetando la búsqueda y la selección actuales.
   function drawAttach() {
     const target = $("#file-attach-target").value;
     $("#file-new-title-label").hidden = target !== ":new";
@@ -145,6 +154,8 @@ export function initializeSeriesFiles({
           .join("")
       : "<p>No hay archivos en el lector. Impórtalos aquí o sincroniza tu carpeta de Drive desde Lector.</p>";
   }
+  // Guarda la relación entre archivos y serie y actualiza su referencia de lectura.
+  // La identidad se vuelve a comprobar al terminar operaciones asíncronas para no escribir en otra cuenta.
   async function assign(ids, target) {
     const series = get(target);
     if (!series) throw new Error("La serie ya no existe.");
@@ -172,6 +183,7 @@ export function initializeSeriesFiles({
       );
     return true;
   }
+  // Recibe el avance real del lector y lo convierte en una edición de biblioteca sincronizable.
   async function progress(book) {
     if (!book.seriesId || !book.issue) return;
     const snapshot = { ...book },

@@ -2,6 +2,7 @@ import { httpUrl } from "./model.js";
 import { naturalOrder } from "./reader-model.js";
 export const FILE_LIBRARY_URL =
   "https://guillermogarcia137.github.io/panelverse/";
+// Reconoce los enlaces internos de una serie descargada y recupera sus datos de reanudación.
 export function fileSeriesInfo(series) {
   try {
     const url = new URL(series.url),
@@ -29,6 +30,8 @@ export function fileSeriesInfo(series) {
     return null;
   }
 }
+// Guarda número, archivo y página en un enlace interno compatible con el esquema de sincronización existente.
+// La nube recibe esa referencia de lectura; los bytes del CBR/CBZ siguen en el navegador o en Drive.
 export function fileSeriesUrl(
   series,
   { book = null, page = 0, issue = 0 } = {},
@@ -45,6 +48,7 @@ export function fileSeriesUrl(
   }
   return httpUrl(url.href);
 }
+// Selecciona los archivos vinculados a una serie y los ordena por número.
 export function seriesBooks(books, seriesId) {
   return books
     .filter((b) => b.seriesId === seriesId)
@@ -52,6 +56,7 @@ export function seriesBooks(books, seriesId) {
       (a, b) => (a.issue || 0) - (b.issue || 0) || naturalOrder(a.name, b.name),
     );
 }
+// Propone un número a partir del nombre del archivo; es una ayuda y se puede corregir al vincularlo.
 export function guessIssue(name) {
   const title = name.replace(/\.(cbr|cbz)$/i, "");
   const explicit = title.match(/#\s*(\d{1,5})(?![\d.])/);
@@ -63,6 +68,7 @@ export function guessIssue(name) {
     ? value
     : null;
 }
+// Vincula archivos seleccionados asignando números sin duplicar los que ya usa la serie.
 export function assignIssues(books, selected, seriesId, resume = null) {
   const ids = new Set(selected),
     used = new Set(
@@ -91,6 +97,7 @@ export function assignIssues(books, selected, seriesId, resume = null) {
     return { ...book, seriesId, issue };
   });
 }
+// Elige el archivo para continuar: prioriza la referencia guardada y después busca el siguiente pendiente.
 export function nextSeriesBook(series, books) {
   const list = seriesBooks(books, series.id),
     info = fileSeriesInfo(series);
@@ -101,6 +108,8 @@ export function nextSeriesBook(series, books) {
     null
   );
 }
+// Convierte páginas de un archivo en progreso de una serie sin retroceder números ya terminados.
+// La serie figura terminada si todos sus archivos están leídos; cuando hay un total configurado también debe haberse alcanzado.
 export function fileSeriesProgress(series, book, books) {
   const info = fileSeriesInfo(series),
     wasCurrent = info?.book === book.id;

@@ -1,3 +1,4 @@
+/* Presentación de cuenta y sincronización. Los atributos de estado que actualiza JavaScript seleccionan la apariencia correspondiente. */
 .project-links {display:flex;flex-direction:column;gap:12px;padding:22px 13px 20px;margin-top:20px;border-top:1px solid var(--line);}
 .project-links a {display:flex;align-items:center;gap:10px;font:12px var(--ui);color:var(--t-sidebar-text,var(--text));}
 .project-links svg {width:17px;height:17px;flex-shrink:0;opacity:.8;}

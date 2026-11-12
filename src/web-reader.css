@@ -1,3 +1,4 @@
+/* Contenedor de la web de lectura y controles del puente. Estas reglas no modifican el CSS de la web externa. */
 #web-reader {
   inset: 0;
   width: 100%;
