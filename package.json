@@ -8,7 +8,8 @@
     "test": "node --test",
     "build": "node scripts/build.mjs",
     "test:browser": "node scripts/serve-sync-check.mjs",
-    "test:reader-browser": "node scripts/check-reader-browser.mjs"
+    "test:reader-browser": "node scripts/check-reader-browser.mjs",
+    "test:web-reader-browser": "node scripts/check-web-reader-browser.mjs"
   },
   "engines": {
     "node": ">=22"

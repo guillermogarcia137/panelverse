@@ -32,7 +32,7 @@ Con cuenta, iniciar sesión con el mismo Google recupera la biblioteca de Supaba
 
 La cuenta de Google utiliza Supabase y una copia local transaccional en IndexedDB. Los cambios se sincronizan automáticamente; los cambios sin conexión quedan pendientes. La biblioteca sin cuenta permanece en `localStorage`, clave `panelverse.library.v1`. No hay analítica. Exporta copias periódicas. El máximo es 2000 series; una importación admite hasta 5 MB. La importación actualiza los mismos identificadores y añade los demás. Antes se descarga una copia del estado actual. Comprueba que tu navegador permita la descarga.
 
-La biblioteca de series no lee el progreso de Marmota ni calcula URLs del siguiente número. La nueva pestaña Lector permite leer archivos CBR/CBZ propios y descargar para lectura offline desde la carpeta de Drive elegida. No hay integración con Panels/PanelBridge. Uso, autorización y límites en [READER.md](READER.md).
+La biblioteca de series puede recibir la posición de webs compatibles mediante el puente de navegador descrito en [WEB-READING.md](WEB-READING.md). No calcula URLs del siguiente número. La nueva pestaña Lector permite leer archivos CBR/CBZ propios y descargar para lectura offline desde la carpeta de Drive elegida. No hay integración con Panels/PanelBridge. Uso, autorización y límites en [READER.md](READER.md).
 
 ## Desarrollo y comprobaciones
 
@@ -112,3 +112,7 @@ Migración y pruebas de seguridad en `supabase/`; arquitectura, límites y uso e
 ## Lector y Drive (v0.7)
 
 Sala de lectura con importación múltiple CBR/CBZ, carpeta de Google Drive con subcarpetas, descarga al abrir y lectura sin conexión. Página simple/doble/vertical, manga, zoom, marcadores, favoritos, colecciones y progreso por página. El catálogo se actualiza mientras la aplicación está abierta; el progreso por página y las descargas se guardan por cuenta en este navegador, independientes del progreso de series sincronizado con Supabase. [Guía, configuración de Drive y pruebas](READER.md).
+
+## Lectura web conectada (v0.8)
+
+Contenedor para enlaces de series y puente instalable por dominio para lectores de imágenes compatibles, incluidos Madara/Marmota. Guarda página, capítulo completado y el siguiente enlace observado en la biblioteca existente. Incluye pestaña conectada como alternativa cuando una web bloquea los marcos. Requiere instalar el puente en el navegador; otras estructuras necesitan un adaptador y Safari físico sigue pendiente de verificación. [Investigación, instalación y límites](WEB-READING.md).
