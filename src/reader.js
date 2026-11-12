@@ -42,7 +42,8 @@ let owner = null,
   observer = null,
   urls = [],
   coverUrls = [],
-  busy = false;
+  busy = false,
+  integration = {};
 function message(text) {
   $("#reader-message").textContent = text;
 }
@@ -92,6 +93,7 @@ async function saveSettings() {
   await readerPut("settings", owner, "preferences", settings);
 }
 function render() {
+  integration.onBooksChange?.();
   for (const url of coverUrls) URL.revokeObjectURL(url);
   coverUrls = [];
   $("#drive-folder-name").textContent = settings.folder
@@ -136,7 +138,7 @@ function render() {
     ? list
         .map(
           (book) =>
-            `<article class="reader-book"><button class="reader-cover" data-read-action="open" data-id="${esc(book.id)}" aria-label="Leer ${esc(book.title)}"><span class="reader-cover-type">${esc(book.name.split(".").pop().toUpperCase())}</span><strong>${esc(book.title)}</strong>${book.cover ? '<img alt="" loading="lazy">' : ""}<span class="reader-cover-state">${book.finished ? "Leído" : book.pages ? `${book.page + 1} / ${book.pages}` : "Por descubrir"}</span></button><div class="reader-book-info"><small>${esc(book.collection || (book.source === "drive" ? "GOOGLE DRIVE" : "EN ESTE DISPOSITIVO"))}</small><h3>${esc(book.title)}</h3><p>${book.cachedVersion ? "Disponible sin conexión" : book.missing ? "Ya no está en la carpeta" : "Descarga al abrir"}${book.size ? " · " + (book.size / 1024 / 1024).toFixed(1) + " MB" : ""}</p>${book.pages ? `<progress value="${book.finished ? book.pages : book.page + 1}" max="${book.pages}" aria-label="Progreso de ${esc(book.title)}"></progress>` : ""}<div class="reader-book-actions"><button class="quiet" data-read-action="open" data-id="${esc(book.id)}">${book.page ? "Continuar" : "Leer"}</button><button class="quiet" data-read-action="favorite" data-id="${esc(book.id)}" aria-label="${book.favorite ? "Quitar de" : "Añadir a"} favoritos" aria-pressed="${!!book.favorite}">${book.favorite ? "★" : "☆"}</button><button class="quiet" data-read-action="remove" data-id="${esc(book.id)}" aria-label="${book.source === "drive" ? "Liberar descarga" : "Eliminar cómic"}">${book.source === "drive" ? "↓−" : "×"}</button></div></div></article>`,
+            `<article class="reader-book"><button class="reader-cover" data-read-action="open" data-id="${esc(book.id)}" aria-label="Leer ${esc(book.title)}"><span class="reader-cover-type">${esc(book.name.split(".").pop().toUpperCase())}</span><strong>${esc(book.title)}</strong>${book.cover ? '<img alt="" loading="lazy">' : ""}<span class="reader-cover-state">${book.finished ? "Leído" : book.pages ? `${book.page + 1} / ${book.pages}` : "Por descubrir"}</span></button><div class="reader-book-info"><small>${esc(book.collection || (book.source === "drive" ? "GOOGLE DRIVE" : "EN ESTE DISPOSITIVO"))}</small><h3>${esc(book.title)}</h3><p>${book.cachedVersion ? "Disponible sin conexión" : book.missing ? "Ya no está en la carpeta" : "Descarga al abrir"}${book.size ? " · " + (book.size / 1024 / 1024).toFixed(1) + " MB" : ""}</p>${book.pages ? `<progress value="${book.finished ? book.pages : book.page + 1}" max="${book.pages}" aria-label="Progreso de ${esc(book.title)}"></progress>` : ""}<div class="reader-book-actions"><button class="quiet" data-read-action="open" data-id="${esc(book.id)}">${book.page ? "Continuar" : "Leer"}</button><button class="quiet" data-read-action="series" data-id="${esc(book.id)}">${book.seriesId ? "Serie" : "Vincular"}</button><button class="quiet" data-read-action="favorite" data-id="${esc(book.id)}" aria-label="${book.favorite ? "Quitar de" : "Añadir a"} favoritos" aria-pressed="${!!book.favorite}">${book.favorite ? "★" : "☆"}</button><button class="quiet" data-read-action="remove" data-id="${esc(book.id)}" aria-label="${book.source === "drive" ? "Liberar descarga" : "Eliminar cómic"}">${book.source === "drive" ? "↓−" : "×"}</button></div></div></article>`,
         )
         .join("")
     : `<div class="empty"><span>▧</span><h3>${books.length ? "No hay cómics en esta vista" : "Tu próxima historia, aquí mismo"}</h3><p>Importa archivos CBR o CBZ, o conecta tu carpeta de Google Drive.</p></div>`;
@@ -184,6 +186,7 @@ async function coverBlob(blob) {
   }
 }
 async function importFiles(files) {
+  const imported = [];
   if (busy || syncing) {
     message("Espera a que termine la operación actual.");
     return;
@@ -232,6 +235,7 @@ async function importFiles(files) {
       };
       await saveBook(account, book, file);
       if (current !== epoch) break;
+      imported.push(id);
       books = books.filter((b) => b.id !== id).concat(book);
       render();
     }
@@ -243,6 +247,7 @@ async function importFiles(files) {
     busy = false;
     $("#reader-files").value = "";
   }
+  return current === epoch ? imported : [];
 }
 async function syncDrive() {
   if (syncing || busy || reading || !drive || !settings.folder) return;
@@ -340,7 +345,7 @@ function closeReader() {
     document.exitFullscreen().catch(() => {});
   if (previous) render();
 }
-async function openBook(book) {
+async function openBook(book, { resumePage = null } = {}) {
   if (busy || syncing) {
     message("Espera a que termine la operación actual.");
     return;
@@ -377,7 +382,7 @@ async function openBook(book) {
     try {
       book.cover ||= await coverBlob(await archive.page(0));
       book.pages = archive.length;
-      book.page = Math.min(book.page || 0, archive.length - 1);
+      book.page = Math.min(resumePage ?? book.page ?? 0, archive.length - 1);
       book.cachedVersion = book.source === "local" ? "local" : version;
       await saveBook(account, book, file);
     } catch (error) {
@@ -404,18 +409,25 @@ async function openBook(book) {
     await drawPages();
     $("#comic-viewport").focus();
     message("Cómic descargado y disponible sin conexión.");
+    render();
   } catch (error) {
     if (current === epoch && error.name !== "AbortError") fail(error);
   } finally {
     busy = false;
   }
 }
-async function remember(page) {
+async function remember(page, completed = false) {
   if (!reading) return;
   const { book, account } = reading;
   book.page = page;
   book.readAt = new Date().toISOString();
+  if (book.seriesId && completed) book.finished = true;
   await saveBook(account, book);
+  if (reading?.book === book && account === owner) {
+    await integration.onProgress?.(book);
+    updateNextIssue();
+    integration.onBooksChange?.();
+  }
 }
 async function drawPages() {
   if (!reading) return;
@@ -424,6 +436,7 @@ async function drawPages() {
   const context = reading,
     { book, archive } = context,
     loaded = new Map(),
+    successful = new Set(),
     mode = $("#comic-mode").value,
     viewport = $("#comic-viewport");
   viewport.replaceChildren();
@@ -485,6 +498,15 @@ async function drawPages() {
       };
       slot.replaceChildren(img);
       if (mode === "vertical") slot.style.minHeight = "";
+      await img.decode();
+      if (version !== viewVersion) return;
+      successful.add(index);
+      if (mode === "vertical") {
+        const box = slot.getBoundingClientRect(),
+          root = viewport.getBoundingClientRect();
+        if (box.bottom > root.top && box.top < root.bottom)
+          await remember(index, index === archive.length - 1);
+      }
     } catch (error) {
       if (version === viewVersion) slot.textContent = error.message;
     }
@@ -503,7 +525,8 @@ async function drawPages() {
               image(index, slot);
             }
             if (entry.intersectionRatio >= 0.25 && version === viewVersion) {
-              remember(index).catch(fail);
+              if (successful.has(index))
+                remember(index, index === archive.length - 1).catch(fail);
               $("#comic-page").textContent = `${index + 1} / ${archive.length}`;
               $("#comic-range").value = index;
               $("#comic-range").setAttribute(
@@ -540,7 +563,11 @@ async function drawPages() {
       viewport.scrollTop = 0;
       viewport.scrollLeft = 0;
     }
-    if (version === viewVersion) await remember(book.page);
+    if (version === viewVersion)
+      await remember(
+        book.page,
+        mode !== "vertical" && successful.has(archive.length - 1),
+      );
   } catch (error) {
     if (version === viewVersion) fail(error);
   }
@@ -561,7 +588,38 @@ async function move(delta) {
   reading.book.page = Math.max(0, Math.min(total - 1, current + delta * step));
   await drawPages();
 }
-export function initializeReader() {
+function updateNextIssue() {
+  if (reading)
+    $("#comic-finish").textContent = reading.book.finished
+      ? "Marcar sin terminar"
+      : "Marcar terminado";
+  const next = reading?.book.seriesId
+    ? books
+        .filter(
+          (b) =>
+            b.seriesId === reading.book.seriesId &&
+            (b.issue || 0) > (reading.book.issue || 0),
+        )
+        .sort((a, b) => a.issue - b.issue)[0]
+    : null;
+  $("#comic-next-issue").hidden = !next;
+  $("#comic-next-issue").textContent = next
+    ? `Siguiente número · #${next.issue} →`
+    : "";
+}
+export function initializeReader(options = {}) {
+  integration = options;
+  $("#comic-next-issue").onclick = () => {
+    if (!reading) return;
+    const next = books
+      .filter(
+        (b) =>
+          b.seriesId === reading.book.seriesId &&
+          (b.issue || 0) > (reading.book.issue || 0),
+      )
+      .sort((a, b) => a.issue - b.issue)[0];
+    if (next) openBook(next).catch(fail);
+  };
   $("#reader-nav").addEventListener("click", () => viewReader());
   $("#navigation").addEventListener("click", (event) => {
     if (event.target.closest("[data-filter]")) viewReader(false);
@@ -647,7 +705,9 @@ export function initializeReader() {
     if (!book) return;
     try {
       if (button.dataset.readAction === "open") await openBook(book);
-      else if (button.dataset.readAction === "favorite") {
+      else if (button.dataset.readAction === "series") {
+        integration.onAttach?.(book.id);
+      } else if (button.dataset.readAction === "favorite") {
         await patch(book, { favorite: !book.favorite });
         render();
       } else if (
@@ -716,6 +776,8 @@ export function initializeReader() {
     if (!reading) return;
     try {
       await patch(reading.book, { finished: !reading.book.finished });
+      await integration.onProgress?.(reading.book);
+      integration.onBooksChange?.();
       $("#comic-finish").textContent = reading.book.finished
         ? "Marcar sin terminar"
         : "Marcar terminado";
@@ -828,5 +890,35 @@ export function initializeReader() {
   const returning = sessionStorage.getItem("panelverse.reader-return");
   sessionStorage.removeItem("panelverse.reader-return");
   if (location.hash === "#reading" || returning) viewReader();
-  load();
+  const ready = load();
+  return {
+    ready,
+    getBooks: () => books.slice(),
+    importFiles,
+    openBook: (id, options) => {
+      const book = books.find((b) => b.id === id);
+      if (!book)
+        throw new Error(
+          "El archivo no está en este dispositivo. Impórtalo o vincúlalo desde el lector.",
+        );
+      return openBook(book, options);
+    },
+    async updateBooks(updates) {
+      if (busy || syncing)
+        throw new Error(
+          "Espera a que termine la importación o sincronización.",
+        );
+      const account = owner,
+        current = epoch;
+      const next = books.map(
+        (book) => updates.find((item) => item.id === book.id) || book,
+      );
+      await saveBooks(account, next);
+      if (current !== epoch) return false;
+      books = next;
+      render();
+      return true;
+    },
+    show: viewReader,
+  };
 }

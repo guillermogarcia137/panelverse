@@ -1,6 +1,6 @@
 # Sala de lectura — v0.7
 
-La pestaña **Lector** añade lectura dentro de PanelVerse. La biblioteca de series y su sincronización con Supabase se conservan. El lector tiene su propio almacenamiento por cuenta en IndexedDB; no cambia el esquema SQL ni requiere un servidor nuevo.
+La pestaña **Lector** añade lectura dentro de PanelVerse. La biblioteca de series y su sincronización con Supabase se conservan. El lector tiene su propio almacenamiento por cuenta en IndexedDB; desde v0.9 sus archivos también pueden vincularse a series de la biblioteca principal ([guía](SERIES-FILES.md)). No cambia el esquema SQL ni requiere un servidor nuevo.
 
 ## Leer
 
@@ -26,7 +26,7 @@ La API pagina los resultados y recorre las subcarpetas elegidas. Solo confirma u
 
 - Base `panelverse-reader`: almacenes `books` (fichas/progreso/miniaturas), `files` (CBR/CBZ originales) y `settings` (carpeta/preferencias). Las claves incluyen el propietario o `guest`.
 - Cambiar de cuenta cierra el lector, cancela peticiones y carga su biblioteca independiente. Los archivos sin cuenta no se migran automáticamente. Los cambios de las series originales siguen su mecanismo Supabase existente.
-- **El progreso por página, marcadores, selección de carpeta y descargas son locales a cada navegador.** No se sincronizan entre dispositivos en esta versión. Seleccionar la misma carpeta en otro dispositivo recupera los mismos archivos desde Drive, con progreso independiente.
+- **El progreso del lector independiente, marcadores, selección de carpeta y descargas son locales a cada navegador.** Los archivos vinculados a una serie guardan además la referencia de número y página en la biblioteca sincronizada; su lista completa de vinculaciones sigue siendo local. No se sincronizan entre dispositivos en esta versión. Seleccionar la misma carpeta en otro dispositivo recupera los mismos archivos desde Drive, con progreso independiente.
 - La PWA precarga los módulos y el WASM. Para leer sin conexión hay que haber abierto/descargado el cómic en ese navegador. Borrar los datos del sitio borra las descargas y los datos locales del lector. La cuota depende del navegador; los errores de almacenamiento se muestran y no se confirman como éxito.
 - Las copias JSON de series conservan su formato v1 y **no incluyen** archivos ni datos del lector. Los originales locales y de Drive se deben conservar.
 - Hasta 250 MB por archivo, 4000 imágenes por cómic, 40 MB por imagen y 5000 cómics/1000 carpetas por consulta de Drive. El lector extrae páginas bajo demanda; en vertical mantiene una ventana limitada de imágenes cargadas.
