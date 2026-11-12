@@ -7,6 +7,8 @@ import {
   applyWebLocation,
 } from "./web-progress.js";
 const $ = (selector) => document.querySelector(selector);
+// Abre webs de lectura y escucha el puente instalado en el navegador.
+// Un iframe no permite inspeccionar otra web por sí solo: el puente comunica el progreso con postMessage.
 export function initializeWebReader({ getSeries, getOwner, save }) {
   let active = null,
     timer = null,
@@ -14,9 +16,11 @@ export function initializeWebReader({ getSeries, getOwner, save }) {
     warning = null,
     pending = null,
     queue = Promise.resolve();
+  // Muestra si el puente está conectado o necesita instalación; abrir la web no demuestra que esté enviando progreso.
   function status(text) {
     $("#web-reader-state").textContent = text;
   }
+  // Inicia el saludo entre lector y puente para asociar los mensajes a esta sesión.
   function beginHandshake() {
     if (!active) return;
     active.ready = false;
@@ -42,6 +46,7 @@ export function initializeWebReader({ getSeries, getOwner, save }) {
       );
     }
   }
+  // Agrupa actualizaciones y guarda una a una para evitar que una respuesta lenta sobrescriba una página más reciente.
   function flush() {
     clearTimeout(timer);
     const job = pending;
@@ -81,6 +86,7 @@ export function initializeWebReader({ getSeries, getOwner, save }) {
       return false;
     }
   }
+  // Desconecta la sesión actual y su temporizador antes de cerrar la lectura.
   async function close({ discard = false } = {}) {
     clearInterval(handshake);
     clearTimeout(warning);
@@ -96,6 +102,7 @@ export function initializeWebReader({ getSeries, getOwner, save }) {
     if (!discard) await flush();
     if (previous) status("");
   }
+  // Valida el enlace y prepara una sesión de lectura con ámbito y canal propios.
   function open(series) {
     const url = cleanReadingUrl(series.url);
     if (!/^https?:/.test(url)) return;

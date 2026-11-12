@@ -1,3 +1,4 @@
+// Límites de memoria: rechazamos archivos o páginas demasiado grandes antes de intentar cargarlos en el móvil.
 export const MAX_ARCHIVE = 250 * 1024 * 1024;
 export const MAX_PAGE = 40 * 1024 * 1024;
 export const MAX_PAGES = 4000;
@@ -8,12 +9,15 @@ export const isPage = (name) =>
   !/(^|\/)\./.test(name);
 export const naturalOrder = (a, b) =>
   a.localeCompare(b, "es", { numeric: true, sensitivity: "base" });
+// Los índices internos empiezan en cero; la interfaz muestra página + 1.
+// En modo doble, la portada se muestra sola y solo se añade una segunda página si existe.
 export function pageIndexes(page, total, mode = "single") {
   const start = Math.max(0, Math.min(total - 1, Number(page) || 0));
   return mode === "double" && start > 0 && start + 1 < total
     ? [start, start + 1]
     : [start];
 }
+// Acepta un enlace de carpeta de Drive o su id y devuelve el identificador que necesita la API.
 export function folderId(value) {
   const text = String(value || "").trim();
   const match = text.match(
@@ -26,6 +30,7 @@ export function folderId(value) {
     );
   return id;
 }
+// Actualiza el catálogo sin perder el progreso existente. Los archivos ausentes se marcan, no se borran de golpe.
 export function reconcileDrive(current, files, root) {
   const map = new Map(current.map((book) => [book.id, book]));
   for (const book of map.values())

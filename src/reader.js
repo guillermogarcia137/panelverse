@@ -44,9 +44,11 @@ let owner = null,
   coverUrls = [],
   busy = false,
   integration = {};
+// Actualiza el aviso de la sección del lector sin interrumpir la lectura con una ventana adicional.
 function message(text) {
   $("#reader-message").textContent = text;
 }
+// Convierte errores técnicos en un aviso visible; si falla el espacio disponible ayuda a distinguirlo de un cómic dañado.
 function fail(error) {
   if ($("#comic-reader")?.open)
     $("#comic-error").textContent = error.message || "No se pudo guardar.";
@@ -56,6 +58,7 @@ function fail(error) {
       : error.message || "No se pudo completar la operación.",
   );
 }
+// Alterna entre biblioteca y lector manteniendo los controles de la sección coherentes con la vista actual.
 function viewReader(show = true) {
   $("#reading-library").hidden = !show;
   for (const selector of [".intro", "#resume", "#library"])
@@ -69,6 +72,7 @@ function viewReader(show = true) {
   } else if (location.hash === "#reading")
     history.replaceState(null, "", location.pathname + location.search);
 }
+// Recupera fichas y preferencias del propietario actual. La generación permite descartar una carga si cambia la cuenta.
 async function load() {
   const version = ++epoch;
   operation?.abort();
@@ -89,9 +93,11 @@ async function load() {
     if (version === epoch) fail(error);
   }
 }
+// Guarda las preferencias del lector separadas de los archivos y del progreso de cada número.
 async function saveSettings() {
   await readerPut("settings", owner, "preferences", settings);
 }
+// Pinta las fichas del lector a partir del catálogo local y aplica los filtros actuales.
 function render() {
   integration.onBooksChange?.();
   for (const url of coverUrls) URL.revokeObjectURL(url);
@@ -162,11 +168,13 @@ function render() {
     ? `<div class="reader-resume"><div><p class="eyebrow">DONDE LO DEJASTE</p><h3>${esc(latest.title)}</h3><p>Página ${latest.page + 1}${latest.pages ? " de " + latest.pages : ""}</p></div><button class="primary" data-read-action="open" data-id="${esc(latest.id)}">Continuar leyendo →</button></div>`
     : "";
 }
+// Guarda solo los campos que cambian en una ficha y actualiza la vista del lector.
 async function patch(book, changes) {
   const next = { ...book, ...changes };
   await saveBook(owner, next);
   Object.assign(book, changes);
 }
+// Reduce la primera página a una portada ligera para no conservar imágenes enormes en cada tarjeta.
 async function coverBlob(blob) {
   const bitmap = await createImageBitmap(blob);
   try {
@@ -185,6 +193,7 @@ async function coverBlob(blob) {
     bitmap.close();
   }
 }
+// Importa archivos elegidos o arrastrados. La huella SHA-256 identifica el contenido y evita duplicar el mismo cómic.
 async function importFiles(files) {
   const imported = [];
   if (busy || syncing) {
@@ -249,6 +258,8 @@ async function importFiles(files) {
   }
   return current === epoch ? imported : [];
 }
+// Compara la carpeta elegida con el catálogo local conservando el progreso.
+// Sincronizar la lista no descarga de golpe todos los cómics; se descargan cuando se abren.
 async function syncDrive() {
   if (syncing || busy || reading || !drive || !settings.folder) return;
   const current = epoch,
@@ -281,6 +292,7 @@ async function syncDrive() {
     if (current === epoch) render();
   }
 }
+// Muestra las subcarpetas para poder elegir desde la propia web qué carpeta de Drive se sincroniza.
 async function browse(id = "root", name = "Mi unidad") {
   const current = epoch;
   if (!drive) return;
@@ -306,6 +318,7 @@ async function browse(id = "root", name = "Mi unidad") {
     $("#drive-browse-status").textContent = error.message;
   }
 }
+// Solicita permiso de solo lectura para Drive. Este permiso es independiente de la cuenta de PanelVerse.
 async function connect() {
   try {
     const client = getAccountClient();
@@ -327,12 +340,14 @@ async function connect() {
     fail(error);
   }
 }
+// Revoca las URL temporales de imágenes y limpia el seguimiento de páginas para liberar memoria.
 function cleanupPages() {
   observer?.disconnect();
   observer = null;
   for (const url of urls) URL.revokeObjectURL(url);
   urls = [];
 }
+// Cierra el archivo actual y sus recursos antes de volver a la colección.
 function closeReader() {
   viewVersion++;
   cleanupPages();
@@ -345,6 +360,8 @@ function closeReader() {
     document.exitFullscreen().catch(() => {});
   if (previous) render();
 }
+// Abre la copia local o descarga el cómic de Drive, prepara el archivo y recupera la página guardada.
+// Los controles de generación descartan resultados antiguos si se abre otro cómic mientras llega la descarga.
 async function openBook(book, { resumePage = null } = {}) {
   if (busy || syncing) {
     message("Espera a que termine la operación actual.");
@@ -416,6 +433,8 @@ async function openBook(book, { resumePage = null } = {}) {
     busy = false;
   }
 }
+// Guarda la página real y avisa a la biblioteca si el archivo está vinculado a una serie.
+// completed solo se activa tras mostrar correctamente la última página, no por abrir el cómic.
 async function remember(page, completed = false) {
   if (!reading) return;
   const { book, account } = reading;
@@ -429,6 +448,8 @@ async function remember(page, completed = false) {
     integration.onBooksChange?.();
   }
 }
+// Prepara la vista simple, doble o vertical. Cada dibujo tiene una generación para ignorar cargas anteriores.
+// En vertical se cargan páginas cercanas y se liberan imágenes lejanas para limitar la memoria.
 async function drawPages() {
   if (!reading) return;
   const version = ++viewVersion;
@@ -467,6 +488,7 @@ async function drawPages() {
       .join("");
   $("#comic-prev").disabled = book.page === 0;
   $("#comic-next").disabled = book.page >= archive.length - 1;
+  // Extrae y decodifica una página antes de mostrarla. Si la vista cambió durante await, descarta ese resultado.
   async function image(index, slot) {
     try {
       const blob = await archive.page(index);
@@ -572,6 +594,7 @@ async function drawPages() {
     if (version === viewVersion) fail(error);
   }
 }
+// Desplaza la página respetando los límites y el sentido de lectura configurado.
 async function move(delta) {
   if (!reading) return;
   const mode = $("#comic-mode").value,
@@ -588,6 +611,7 @@ async function move(delta) {
   reading.book.page = Math.max(0, Math.min(total - 1, current + delta * step));
   await drawPages();
 }
+// Busca el siguiente archivo vinculado a la serie para continuar sin salir a la biblioteca.
 function updateNextIssue() {
   if (reading)
     $("#comic-finish").textContent = reading.book.finished
@@ -607,6 +631,8 @@ function updateNextIssue() {
     ? `Siguiente número · #${next.issue} →`
     : "";
 }
+// Conecta controles, teclado y cambios de cuenta. Devuelve una API pequeña para integrar este lector con las series.
+// Las funciones recibidas en options permiten comunicar progreso sin acoplar este módulo a app.js.
 export function initializeReader(options = {}) {
   integration = options;
   $("#comic-next-issue").onclick = () => {

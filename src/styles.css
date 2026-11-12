@@ -1,3 +1,4 @@
+/* Estilos comunes de la biblioteca: variables de color, navegación, tarjetas y diálogos. Los módulos del lector tienen sus propias hojas. */
 :root {
   color-scheme: dark;
   --bg: #080f20;
