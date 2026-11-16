@@ -1,6 +1,6 @@
 {
   "name": "panelverse",
-  "version": "0.1.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
     "test:browser": "node scripts/serve-sync-check.mjs",
     "test:reader-browser": "node scripts/check-reader-browser.mjs",
     "test:web-reader-browser": "node scripts/check-web-reader-browser.mjs",
-    "test:series-browser": "node scripts/check-series-files-browser.mjs"
+    "test:series-browser": "node scripts/check-series-files-browser.mjs",
+    "test:drive-series-browser": "node scripts/check-drive-series-browser.mjs"
   },
   "engines": {
     "node": ">=22"

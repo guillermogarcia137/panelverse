@@ -7,7 +7,7 @@ La pestaña **Lector** añade lectura dentro de PanelVerse. La biblioteca de ser
 - **Importar CBR / CBZ** admite varios archivos. Se validan antes de guardar, se extrae una miniatura y se conservan para leer sin conexión. Importar el mismo archivo no duplica el cómic ni borra su progreso (identidad SHA-256).
 - **Leer / Continuar** abre un lector que ocupa la ventana, con página simple, doble página con portada independiente, vertical, sentido occidental/manga, ajuste de página o ancho, zoom y tres fondos.
 - Flechas, botones, deslizador y gestos horizontales permiten navegar. El gesto no cambia de página en modo vertical ni con zoom ampliado. El zoom del navegador sigue disponible.
-- Marcadores por página, favoritos, historial de lectura, colecciones por subcarpeta y filtros de descargas, lectura y terminados. La finalización es explícita con **Marcar terminado**.
+- Marcadores por página, favoritos, historial de lectura, colecciones por subcarpeta y filtros de descargas, lectura y terminados. Para archivos independientes la finalización es explícita con **Marcar terminado**; en números vinculados a una serie también se detecta al mostrar la última página.
 - **Pantalla completa** depende de las capacidades del navegador. En Safari/iPad donde no esté disponible se conserva el lector a tamaño de ventana.
 
 ## Conectar Google Drive
@@ -26,7 +26,7 @@ La API pagina los resultados y recorre las subcarpetas elegidas. Solo confirma u
 
 - Base `panelverse-reader`: almacenes `books` (fichas/progreso/miniaturas), `files` (CBR/CBZ originales) y `settings` (carpeta/preferencias). Las claves incluyen el propietario o `guest`.
 - Cambiar de cuenta cierra el lector, cancela peticiones y carga su biblioteca independiente. Los archivos sin cuenta no se migran automáticamente. Los cambios de las series originales siguen su mecanismo Supabase existente.
-- **El progreso del lector independiente, marcadores, selección de carpeta y descargas son locales a cada navegador.** Los archivos vinculados a una serie guardan además la referencia de número y página en la biblioteca sincronizada; su lista completa de vinculaciones sigue siendo local. No se sincronizan entre dispositivos en esta versión. Seleccionar la misma carpeta en otro dispositivo recupera los mismos archivos desde Drive, con progreso independiente.
+- **Los marcadores, historial por archivo, carpeta general y descargas del lector son locales a cada navegador.** Los archivos vinculados a una serie guardan su referencia actual de número/página en la biblioteca sincronizada. Desde v0.10, las carpetas de las series también se recuperan con la cuenta y reconstruyen sus vinculaciones automáticas al conectar Drive. Abrir el número actual desde Lector respeta la página de la serie. La lista manual de vinculaciones y el historial completo por archivo no se sincronizan.
 - La PWA precarga los módulos y el WASM. Para leer sin conexión hay que haber abierto/descargado el cómic en ese navegador. Borrar los datos del sitio borra las descargas y los datos locales del lector. La cuota depende del navegador; los errores de almacenamiento se muestran y no se confirman como éxito.
 - Las copias JSON de series conservan su formato v1 y **no incluyen** archivos ni datos del lector. Los originales locales y de Drive se deben conservar.
 - Hasta 250 MB por archivo, 4000 imágenes por cómic, 40 MB por imagen y 5000 cómics/1000 carpetas por consulta de Drive. El lector extrae páginas bajo demanda; en vertical mantiene una ventana limitada de imágenes cargadas.
@@ -51,3 +51,7 @@ CHROMIUM_PATH=/usr/bin/chromium npm run test:reader-browser
 La prueba de navegador usa un perfil temporal y datos sintéticos; nunca accede al Drive real. `READER_TEST_URL` permite comprobar una exportación de producción servida en otra URL local. Las capturas temporales se guardan en `work/`.
 
 Se comprueban CBZ y CBR con PNG reales, orden natural y extracción concurrente, límites, validación de carpetas, paginación y errores de Drive, reconciliación sin pérdida de progreso, navegación, doble página/manga/vertical, marcadores, recarga, lectura offline mediante el service worker, vista móvil y separación por cuenta. Drive se verifica con respuestas simuladas y autorización GET; falta comprobar OAuth/Drive con la cuenta real y Safari en iPad físico.
+
+## Actualización v0.10
+
+Las carpetas de las series se suman a la carpeta general en la consulta periódica y en **Sincronizar**. La carga local termina antes de iniciar consultas con un permiso recién recibido; así se conserva la información que ya existía en IndexedDB. Los catálogos se guardan después de completar las consultas. Un 401 de Google retira el permiso caducado de esta sesión y permite volver a conectar sin borrar archivos ni progreso.

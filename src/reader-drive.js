@@ -19,10 +19,13 @@ export class DriveClient {
       signal,
     });
     if (!response.ok) {
-      if (response.status === 401)
-        throw new Error(
+      if (response.status === 401) {
+        const error = new Error(
           "La autorización de Drive ha caducado. Pulsa «Conectar Drive» para renovarla.",
         );
+        error.code = "DRIVE_AUTH_EXPIRED";
+        throw error;
+      }
       if (response.status === 403)
         throw new Error(
           "Drive no permite acceder. Autoriza la lectura y comprueba que Google Drive API esté habilitada.",
@@ -58,7 +61,7 @@ export class DriveClient {
   }
   // Recorre subcarpetas con una cola y evita visitar la misma carpeta dos veces. Solo añade archivos CBR o CBZ al catálogo.
   async scan(root, { recursive = true, signal } = {}) {
-    const queue = [{ id: root, path: "" }],
+    const queue = [{ id: root, path: "", ancestors: [] }],
       seen = new Set(),
       files = [];
     while (queue.length) {
@@ -75,9 +78,17 @@ export class DriveClient {
             queue.push({
               id: file.id,
               path: folder.path ? folder.path + "/" + file.name : file.name,
+              ancestors: [...folder.ancestors, folder.id],
             });
         } else if (isComic(file.name)) {
-          files.push({ ...file, collection: folder.path });
+          // Usamos identificadores de carpetas para vincular series. Dos
+          // carpetas con el mismo nombre no deben mezclar sus números.
+          files.push({
+            ...file,
+            collection: folder.path,
+            driveParent: folder.id,
+            driveAncestors: [...folder.ancestors, folder.id],
+          });
           if (files.length > 5000)
             throw new Error(
               "La carpeta supera 5000 cómics. Elige una carpeta más concreta.",

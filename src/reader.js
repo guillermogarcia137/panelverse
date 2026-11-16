@@ -43,6 +43,9 @@ let owner = null,
   urls = [],
   coverUrls = [],
   busy = false,
+  loading = false,
+  driveError = "",
+  folderSelection = null,
   integration = {};
 // Actualiza el aviso de la sección del lector sin interrumpir la lectura con una ventana adicional.
 function message(text) {
@@ -50,13 +53,18 @@ function message(text) {
 }
 // Convierte errores técnicos en un aviso visible; si falla el espacio disponible ayuda a distinguirlo de un cómic dañado.
 function fail(error) {
+  if (error.code === "DRIVE_AUTH_EXPIRED") {
+    drive = null;
+    render();
+  }
   if ($("#comic-reader")?.open)
     $("#comic-error").textContent = error.message || "No se pudo guardar.";
-  message(
+  const text =
     error.name === "QuotaExceededError"
       ? "No queda espacio en el navegador. Libera descargas o almacenamiento antes de continuar."
-      : error.message || "No se pudo completar la operación.",
-  );
+      : error.message || "No se pudo completar la operación.";
+  message(text);
+  integration.onError?.(text);
 }
 // Alterna entre biblioteca y lector manteniendo los controles de la sección coherentes con la vista actual.
 function viewReader(show = true) {
@@ -75,9 +83,11 @@ function viewReader(show = true) {
 // Recupera fichas y preferencias del propietario actual. La generación permite descartar una carga si cambia la cuenta.
 async function load() {
   const version = ++epoch;
+  loading = true;
   operation?.abort();
   operation = null;
   drive = null;
+  driveError = "";
   closeReader();
   try {
     const [list, prefs] = await Promise.all([
@@ -87,10 +97,14 @@ async function load() {
     if (version !== epoch) return;
     books = list;
     settings = prefs || {};
-    render();
-    if (drive && settings.folder) syncDrive();
   } catch (error) {
     if (version === epoch) fail(error);
+  } finally {
+    if (version === epoch) {
+      loading = false;
+      render();
+      if (drive) syncDrive();
+    }
   }
 }
 // Guarda las preferencias del lector separadas de los archivos y del progreso de cada número.
@@ -105,7 +119,10 @@ function render() {
   $("#drive-folder-name").textContent = settings.folder
     ? `Carpeta: ${settings.folderName || settings.folder}${settings.recursive === false ? "" : " · incluye subcarpetas"}`
     : "Conecta Drive y elige dónde están tus cómics.";
-  $("#drive-sync").disabled = syncing || !drive || !settings.folder;
+  $("#drive-sync").disabled =
+    syncing ||
+    !drive ||
+    (!settings.folder && !integration.getDriveFolders?.().length);
   $("#drive-connection").textContent = drive
     ? "Drive autorizado · solo lectura"
     : "Drive sin autorizar en esta sesión";
@@ -196,7 +213,7 @@ async function coverBlob(blob) {
 // Importa archivos elegidos o arrastrados. La huella SHA-256 identifica el contenido y evita duplicar el mismo cómic.
 async function importFiles(files) {
   const imported = [];
-  if (busy || syncing) {
+  if (busy || syncing || loading) {
     message("Espera a que termine la operación actual.");
     return;
   }
@@ -261,36 +278,78 @@ async function importFiles(files) {
 // Compara la carpeta elegida con el catálogo local conservando el progreso.
 // Sincronizar la lista no descarga de golpe todos los cómics; se descargan cuando se abren.
 async function syncDrive() {
-  if (syncing || busy || reading || !drive || !settings.folder) return;
+  if (syncing || busy || loading || reading || !drive) return false;
+  const folders = new Map();
+  for (const entry of [
+    ...(settings.folder
+      ? [{ folder: settings.folder, recursive: settings.recursive !== false }]
+      : []),
+    ...(integration.getDriveFolders?.() || []),
+  ]) {
+    const id = folderId(entry.folder);
+    folders.set(id, {
+      folder: id,
+      recursive: folders.get(id)?.recursive || entry.recursive,
+    });
+  }
+  if (!folders.size) return false;
   const current = epoch,
     account = owner,
-    client = drive,
-    folder = settings.folder;
+    client = drive;
   syncing = true;
+  driveError = "";
   operation = new AbortController();
   render();
   message("Buscando cómics en Drive…");
   try {
-    const files = await client.scan(folder, {
-      recursive: settings.recursive !== false,
-      signal: operation.signal,
-    });
-    if (current !== epoch) return;
-    const next = reconcileDrive(books, files, folder);
+    let next = books;
+    const found = new Set();
+    // Cada carpeta debe haberse leído completa antes de guardar el catálogo.
+    // Si falla una petición no convertimos un listado parcial en borrados.
+    for (const { folder, recursive } of folders.values()) {
+      const files = await client.scan(folder, {
+        recursive,
+        signal: operation.signal,
+      });
+      if (current !== epoch || drive !== client) return false;
+      next = reconcileDrive(next, files, folder, { recursive });
+      files.forEach((file) => found.add(file.id));
+    }
     await saveBooks(account, next);
-    if (current !== epoch) return;
+    if (current !== epoch || drive !== client) return false;
     books = next;
     settings.syncedAt = new Date().toISOString();
     await saveSettings();
     message(
-      `${files.length} cómics encontrados. Actualizado a las ${new Date().toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}.`,
+      `${found.size} cómics encontrados en ${folders.size} carpeta(s). Actualizado a las ${new Date().toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}.`,
     );
+    return true;
   } catch (error) {
-    if (current === epoch && error.name !== "AbortError") fail(error);
+    if (current === epoch && error.name !== "AbortError") {
+      driveError = error.message;
+      fail(error);
+    }
+    return false;
   } finally {
     syncing = false;
     if (current === epoch) render();
   }
+}
+// Reutiliza el explorador de carpetas tanto para el Lector independiente
+// como para una serie. La función onSelect decide dónde guardar la elección.
+function chooseDriveFolder({ folder, recursive = true, onSelect = null } = {}) {
+  if (!drive) {
+    message("Pulsa «Conectar Drive» para autorizar el acceso.");
+    return false;
+  }
+  folderSelection = { onSelect, owner, epoch };
+  $("#drive-folder-dialog").showModal();
+  $("#drive-folder-input").value = folder || settings.folder || "";
+  $("#drive-recursive").checked = onSelect
+    ? recursive
+    : settings.recursive !== false;
+  browse();
+  return true;
 }
 // Muestra las subcarpetas para poder elegir desde la propia web qué carpeta de Drive se sincroniza.
 async function browse(id = "root", name = "Mi unidad") {
@@ -316,6 +375,7 @@ async function browse(id = "root", name = "Mi unidad") {
       : "Esta carpeta no tiene subcarpetas.";
   } catch (error) {
     $("#drive-browse-status").textContent = error.message;
+    if (error.code === "DRIVE_AUTH_EXPIRED") fail(error);
   }
 }
 // Solicita permiso de solo lectura para Drive. Este permiso es independiente de la cuenta de PanelVerse.
@@ -363,7 +423,7 @@ function closeReader() {
 // Abre la copia local o descarga el cómic de Drive, prepara el archivo y recupera la página guardada.
 // Los controles de generación descartan resultados antiguos si se abre otro cómic mientras llega la descarga.
 async function openBook(book, { resumePage = null } = {}) {
-  if (busy || syncing) {
+  if (busy || syncing || loading) {
     message("Espera a que termine la operación actual.");
     return;
   }
@@ -399,7 +459,12 @@ async function openBook(book, { resumePage = null } = {}) {
     try {
       book.cover ||= await coverBlob(await archive.page(0));
       book.pages = archive.length;
-      book.page = Math.min(resumePage ?? book.page ?? 0, archive.length - 1);
+      // Abrir desde Lector también debe respetar la posición sincronizada
+      // de una serie, aunque la copia local todavía recuerde una página vieja.
+      book.page = Math.min(
+        resumePage ?? integration.getResumePage?.(book) ?? book.page ?? 0,
+        archive.length - 1,
+      );
       book.cachedVersion = book.source === "local" ? "local" : version;
       await saveBook(account, book, file);
     } catch (error) {
@@ -664,16 +729,7 @@ export function initializeReader(options = {}) {
     );
   $("#reader-drive-connect").onclick = connect;
   $("#drive-sync").onclick = syncDrive;
-  $("#drive-choose").onclick = () => {
-    if (!drive) {
-      message("Pulsa «Conectar Drive» para autorizar el acceso.");
-      return;
-    }
-    $("#drive-folder-dialog").showModal();
-    $("#drive-folder-input").value = settings.folder || "";
-    $("#drive-recursive").checked = settings.recursive !== false;
-    browse();
-  };
+  $("#drive-choose").onclick = () => chooseDriveFolder();
   $("#drive-home").onclick = () => browse();
   $("#drive-use-current").onclick = () => {
     $("#drive-folder-input").value = $("#drive-current").dataset.id;
@@ -682,7 +738,17 @@ export function initializeReader(options = {}) {
     event.preventDefault();
     try {
       const id = folderId($("#drive-folder-input").value),
-        current = epoch;
+        current = epoch,
+        selection = folderSelection;
+      if (
+        !selection ||
+        selection.epoch !== epoch ||
+        selection.owner !== owner ||
+        !drive
+      )
+        throw new Error(
+          "La cuenta o la conexión ha cambiado. Vuelve a elegir la carpeta.",
+        );
       await drive
         .request("files/" + encodeURIComponent(id), {
           fields: "id,mimeType",
@@ -696,6 +762,14 @@ export function initializeReader(options = {}) {
             throw new Error("Selecciona una carpeta de Drive.");
         });
       if (current !== epoch) return;
+      if (selection.onSelect) {
+        await selection.onSelect({
+          folder: id,
+          recursive: $("#drive-recursive").checked,
+        });
+        if (current === epoch) $("#drive-folder-dialog").close();
+        return;
+      }
       settings.folder = id;
       settings.folderName =
         $("#drive-current").dataset.id === id
@@ -708,6 +782,7 @@ export function initializeReader(options = {}) {
       await syncDrive();
     } catch (error) {
       $("#drive-browse-status").textContent = error.message;
+      if (error.code === "DRIVE_AUTH_EXPIRED") fail(error);
     }
   };
   $("#drive-disconnect").onclick = () => {
@@ -884,6 +959,7 @@ export function initializeReader(options = {}) {
   );
   window.addEventListener("panelverse:account-changed", (event) => {
     owner = event.detail.userId;
+    folderSelection = null;
     $("#drive-folder-dialog").close();
     books = [];
     settings = {};
@@ -894,14 +970,13 @@ export function initializeReader(options = {}) {
   window.addEventListener("panelverse:auth-session", (event) => {
     drive = event.detail.token ? new DriveClient(event.detail.token) : null;
     render();
-    if (drive && settings.folder) syncDrive();
+    if (drive) syncDrive();
   });
   setInterval(() => {
     if (
       !document.hidden &&
       navigator.onLine &&
       drive &&
-      settings.folder &&
       !$("#comic-reader").open
     )
       syncDrive();
@@ -920,6 +995,15 @@ export function initializeReader(options = {}) {
   return {
     ready,
     getBooks: () => books.slice(),
+    getDriveStatus: () => ({
+      connected: Boolean(drive),
+      syncing,
+      busy: busy || loading,
+      error: driveError,
+    }),
+    connectDrive: connect,
+    chooseDriveFolder,
+    syncDrive,
     importFiles,
     openBook: (id, options) => {
       const book = books.find((b) => b.id === id);
@@ -930,20 +1014,25 @@ export function initializeReader(options = {}) {
       return openBook(book, options);
     },
     async updateBooks(updates) {
-      if (busy || syncing)
+      if (busy || syncing || loading)
         throw new Error(
           "Espera a que termine la importación o sincronización.",
         );
       const account = owner,
         current = epoch;
-      const next = books.map(
-        (book) => updates.find((item) => item.id === book.id) || book,
-      );
-      await saveBooks(account, next);
-      if (current !== epoch) return false;
-      books = next;
-      render();
-      return true;
+      busy = true;
+      try {
+        const next = books.map(
+          (book) => updates.find((item) => item.id === book.id) || book,
+        );
+        await saveBooks(account, next);
+        if (current !== epoch) return false;
+        books = next;
+        return true;
+      } finally {
+        busy = false;
+        if (current === epoch) render();
+      }
     },
     show: viewReader,
   };

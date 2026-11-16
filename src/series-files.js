@@ -1,4 +1,6 @@
 import { validateSeries } from "./model.js";
+import { folderId } from "./reader-model.js";
+import { automaticDriveIssues } from "./series-drive-model.js";
 import {
   fileSeriesInfo,
   fileSeriesUrl,
@@ -31,9 +33,61 @@ export function initializeSeriesFiles({
     queue = Promise.resolve(),
     coverUrls = [],
     deepOpened = false,
-    working = false;
+    working = false,
+    reconciling = false,
+    linkScheduled = false;
   const get = (id) => getSeries().find((s) => s.id === id);
   const linked = (id) => seriesBooks(reader.getBooks(), id);
+  // Las notificaciones pueden llegar durante un render. Una microtarea
+  // agrupa esos avisos y evita escribir en IndexedDB mientras se dibuja.
+  function scheduleDriveLinks() {
+    if (linkScheduled) return;
+    linkScheduled = true;
+    queueMicrotask(async () => {
+      linkScheduled = false;
+      const status = reader.getDriveStatus();
+      if (reconciling || working || status.busy || status.syncing) return;
+      const owner = getOwner(),
+        current = generation;
+      let changed = false;
+      reconciling = true;
+      try {
+        const updates = automaticDriveIssues(getSeries(), reader.getBooks());
+        if (!updates.length) return;
+        changed = await reader.updateBooks(updates);
+        if (!changed || owner !== getOwner() || current !== generation) return;
+        // Un número nuevo sin leer vuelve a abrir una serie que figuraba
+        // terminada. Solo guardamos si existe realmente ese cambio de estado.
+        const reopened = new Set(
+          updates.filter((b) => !b.finished).map((b) => b.seriesId),
+        );
+        if (
+          getSeries().some((s) => reopened.has(s.id) && s.status === "finished")
+        ) {
+          await save(
+            getSeries().map((s) =>
+              reopened.has(s.id) && s.status === "finished"
+                ? {
+                    ...s,
+                    status: "reading",
+                    updatedAt: new Date().toISOString(),
+                  }
+                : s,
+            ),
+          );
+        }
+      } catch (error) {
+        if (owner === getOwner() && current === generation)
+          $("#series-issues-message").textContent = error.message;
+      } finally {
+        reconciling = false;
+        if (changed && owner === getOwner() && current === generation) {
+          renderLibrary();
+          drawManage();
+        }
+      }
+    });
+  }
   // Produce el resumen de números descargados y de la página pendiente de una serie.
   function summary(series) {
     const list = linked(series.id),
@@ -43,6 +97,7 @@ export function initializeSeriesFiles({
   }
   // Añade portadas locales a las tarjetas de series una vez que app.js ha construido el HTML.
   function decorate() {
+    scheduleDriveLinks();
     coverUrls.forEach((url) => URL.revokeObjectURL(url));
     coverUrls = [];
     document.querySelectorAll("[data-files-cover]").forEach((element) => {
@@ -78,6 +133,7 @@ export function initializeSeriesFiles({
     if (!series || !$("#series-issues").open) return;
     $("#series-issues-title").textContent = series.title;
     $("#series-issues-summary").textContent = summary(series);
+    drawDrive(series);
     const list = linked(series.id);
     $("#series-issues-list").innerHTML = list.length
       ? list
@@ -90,6 +146,7 @@ export function initializeSeriesFiles({
   }
   // Repinta la biblioteca y sus números; si la URL señala una serie existente, abre su gestión una sola vez.
   function refresh() {
+    scheduleDriveLinks();
     renderLibrary();
     drawManage();
     const id = new URL(location.href).searchParams.get("pvCollection");
@@ -102,9 +159,86 @@ export function initializeSeriesFiles({
   function manage(id) {
     if (!get(id)) return;
     managing = id;
+    $("#series-drive-panel").open = false;
+    $("#series-issues-message").textContent = "";
     $("#details").close();
     if (!$("#series-issues").open) $("#series-issues").showModal();
     drawManage();
+  }
+  // El permiso pertenece al navegador; la carpeta pertenece a la serie.
+  // No mostramos «sincronizado» solo porque exista un enlace guardado.
+  function drawDrive(series) {
+    const info = fileSeriesInfo(series),
+      status = reader.getDriveStatus();
+    $("#series-drive-caption").textContent = info?.driveFolder
+      ? status.connected
+        ? "Carpeta vinculada"
+        : "Conectar para recuperar los números"
+      : "Vincular una carpeta";
+    const form = $("#series-drive-form");
+    if (!form.contains(document.activeElement)) {
+      $("#series-drive-folder").value = info?.driveFolder
+        ? `https://drive.google.com/drive/folders/${info.driveFolder}`
+        : "";
+      $("#series-drive-recursive").checked = info?.driveRecursive !== false;
+    }
+    $("#series-drive-status").textContent = status.syncing
+      ? "Actualizando carpetas de Drive…"
+      : status.error
+        ? status.error
+        : info?.driveFolder
+          ? status.connected
+            ? "Carpeta vinculada. Los números nuevos se añadirán a esta serie al sincronizar."
+            : "Carpeta guardada. Conecta Drive en este navegador para recuperar sus números."
+          : "Vincula una carpeta para añadir automáticamente sus CBR y CBZ a esta serie.";
+    $("#series-drive-connect").hidden = status.connected && !status.error;
+    $("#series-drive-sync").disabled =
+      !status.connected || !info?.driveFolder || status.syncing || status.busy;
+    $("#series-drive-browse").disabled =
+      !status.connected || status.syncing || status.busy;
+    $("#series-drive-unlink").hidden = !info?.driveFolder;
+  }
+  async function bindDriveFolder(value, recursive) {
+    const id = managing,
+      owner = getOwner(),
+      current = generation;
+    const series = get(id);
+    if (!series) throw new Error("La serie ya no está disponible.");
+    const folder = value ? folderId(value) : null;
+    if (
+      folder &&
+      getSeries().some(
+        (s) => s.id !== id && fileSeriesInfo(s)?.driveFolder === folder,
+      )
+    )
+      throw new Error(
+        "Esta carpeta ya está vinculada a otra serie. Elige una carpeta distinta o retira primero esa vinculación.",
+      );
+    const info = fileSeriesInfo(series);
+    const next = {
+      ...series,
+      url: fileSeriesUrl(series, {
+        ...info,
+        driveFolder: folder,
+        driveRecursive: recursive,
+      }),
+      updatedAt: new Date().toISOString(),
+    };
+    if (!(await save(getSeries().map((s) => (s.id === id ? next : s)))))
+      throw new Error("No se pudo guardar la carpeta de la serie.");
+    if (owner !== getOwner() || current !== generation) return;
+    drawManage();
+    scheduleDriveLinks();
+    if (folder && reader.getDriveStatus().connected) await reader.syncDrive();
+    if (owner !== getOwner() || current !== generation) return;
+    if (folder && reader.getDriveStatus().error)
+      throw new Error(
+        "Carpeta guardada, pero no se pudo actualizar: " +
+          reader.getDriveStatus().error,
+      );
+    $("#series-issues-message").textContent = folder
+      ? "Carpeta guardada. Los archivos y descargas se conservan en Drive y en el Lector."
+      : "Carpeta desvinculada. Los números que ya tenías siguen en la serie y en el Lector.";
   }
   // Comprueba la serie y pide al lector que abra el archivo y la página de reanudación adecuados.
   async function play(id, bookId = null) {
@@ -119,11 +253,12 @@ export function initializeSeriesFiles({
       return;
     }
     const info = fileSeriesInfo(series),
-      resumePage = book.finished
-        ? 0
-        : info?.book === book.id
+      resumePage =
+        info?.book === book.id && info.completed !== true
           ? info.page
-          : null;
+          : book.finished
+            ? 0
+            : null;
     await reader.openBook(book.id, { resumePage });
   }
   // Prepara el diálogo que permite asignar archivos del lector a una serie existente.
@@ -157,6 +292,8 @@ export function initializeSeriesFiles({
   // Guarda la relación entre archivos y serie y actualiza su referencia de lectura.
   // La identidad se vuelve a comprobar al terminar operaciones asíncronas para no escribir en otra cuenta.
   async function assign(ids, target) {
+    const owner = getOwner(),
+      currentGeneration = generation;
     const series = get(target);
     if (!series) throw new Error("La serie ya no existe.");
     const updates = assignIssues(
@@ -165,9 +302,15 @@ export function initializeSeriesFiles({
       target,
       fileSeriesInfo(series),
     );
-    if (!(await reader.updateBooks(updates))) return false;
+    if (
+      !(await reader.updateBooks(updates)) ||
+      owner !== getOwner() ||
+      currentGeneration !== generation
+    )
+      return false;
     const current = get(target),
       fileInfo = fileSeriesInfo(current);
+    if (!current) throw new Error("La serie ya no existe.");
     const next = {
       ...current,
       url: fileInfo ? current.url : fileSeriesUrl(current),
@@ -234,6 +377,60 @@ export function initializeSeriesFiles({
     }
   };
   $("#series-issues-link").onclick = () => attach(null, managing);
+  $("#series-drive-connect").onclick = () => reader.connectDrive();
+  $("#series-drive-sync").onclick = async () => {
+    $("#series-issues-message").textContent = "";
+    await reader.syncDrive();
+  };
+  $("#series-drive-browse").onclick = () => {
+    const target = managing,
+      info = fileSeriesInfo(get(target));
+    reader.chooseDriveFolder({
+      folder: info?.driveFolder,
+      recursive: info?.driveRecursive !== false,
+      onSelect: async ({ folder, recursive }) => {
+        if (managing !== target)
+          throw new Error("La serie ha cambiado. Vuelve a elegir la carpeta.");
+        if (working)
+          throw new Error("Espera a que termine la operación actual.");
+        working = true;
+        try {
+          await bindDriveFolder(folder, recursive);
+        } finally {
+          working = false;
+          scheduleDriveLinks();
+        }
+      },
+    });
+  };
+  $("#series-drive-form").onsubmit = async (event) => {
+    event.preventDefault();
+    if (working) return;
+    working = true;
+    try {
+      await bindDriveFolder(
+        $("#series-drive-folder").value.trim(),
+        $("#series-drive-recursive").checked,
+      );
+    } catch (error) {
+      $("#series-issues-message").textContent = error.message;
+    } finally {
+      working = false;
+      scheduleDriveLinks();
+    }
+  };
+  $("#series-drive-unlink").onclick = async () => {
+    if (working) return;
+    working = true;
+    try {
+      await bindDriveFolder(null, true);
+    } catch (error) {
+      $("#series-issues-message").textContent = error.message;
+    } finally {
+      working = false;
+      scheduleDriveLinks();
+    }
+  };
   $("#file-attach-target").onchange = () => {
     selection = [
       ...$("#file-attach-list").querySelectorAll("input:checked"),
@@ -307,7 +504,18 @@ export function initializeSeriesFiles({
           .getBooks()
           .find((b) => b.id === unlink.dataset.issueUnlink);
         if (book)
-          await reader.updateBooks([{ ...book, seriesId: null, issue: null }]);
+          await reader.updateBooks([
+            {
+              ...book,
+              seriesId: null,
+              issue: null,
+              // Recordamos esta decisión para que la carpeta no vuelva a
+              // vincular el número que se acaba de retirar manualmente.
+              excludedSeries: [
+                ...new Set([...(book.excludedSeries || []), managing]),
+              ],
+            },
+          ]);
         refresh();
       }
     } catch (error) {
@@ -357,5 +565,18 @@ export function initializeSeriesFiles({
     for (const id of ["series-issues", "file-attach"]) $("#" + id).close();
   });
   reader.ready.then(refresh);
-  return { summary, decorate, refresh, manage, attach, progress };
+  return {
+    summary,
+    decorate,
+    refresh,
+    manage,
+    attach,
+    progress,
+    // También se ven los errores al abrir desde la biblioteca, aunque la
+    // sección independiente del Lector esté oculta detrás de esta ficha.
+    showError(message) {
+      if ($("#series-issues").open)
+        $("#series-issues-message").textContent = message;
+    },
+  };
 }
