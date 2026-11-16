@@ -572,3 +572,15 @@
     grid-row: span 2;
   }
 }
+
+/* La gestión de Drive vive en la ficha de la serie y comparte sus controles. */
+.series-drive { border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 18px 0; background: var(--t-soft, var(--surface)); }
+.series-drive summary { cursor: pointer; font-weight: 650; }
+.series-drive summary small { display: block; margin-top: 7px; color: var(--muted); font-weight: 400; }
+.series-drive[open] > p:first-of-type { margin-top: 18px; }
+.series-drive p { font-size: 13px; line-height: 1.6; }
+.series-drive form { display: grid; gap: 12px; }
+.series-drive .series-issue-actions { margin: 0; }
+.series-drive input { min-width: 0; }
+.series-drive .reader-checkbox { display: flex; align-items: center; gap: 10px; }
+.series-drive .reader-checkbox input { width: 16px; height: 16px; margin: 0; flex: 0 0 16px; }

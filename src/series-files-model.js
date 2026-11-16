@@ -1,5 +1,5 @@
 import { httpUrl } from "./model.js";
-import { naturalOrder } from "./reader-model.js";
+import { naturalOrder, folderId } from "./reader-model.js";
 export const FILE_LIBRARY_URL =
   "https://guillermogarcia137.github.io/panelverse/";
 // Reconoce los enlaces internos de una serie descargada y recupera sus datos de reanudación.
@@ -20,11 +20,25 @@ export function fileSeriesInfo(series) {
         : 0;
     };
     const book = url.searchParams.get("book");
+    const folder = url.searchParams.get("driveFolder");
+    // La carpeta forma parte de la serie sincronizada; el permiso de Google
+    // sigue siendo temporal y nunca se añade a este enlace.
+    let driveFolder = null;
+    try {
+      if (folder) driveFolder = folderId(folder);
+    } catch {
+      /* Una referencia antigua o dañada no convierte la serie en una web. */
+    }
     return {
       book: book && /^[\w-]{1,150}$/.test(book) ? book : null,
       page: Math.min(number("page"), 3999),
       issue: number("issue"),
+      completed: ["true", "false"].includes(url.searchParams.get("completed"))
+        ? url.searchParams.get("completed") === "true"
+        : null,
       web: url.searchParams.get("web") || "",
+      driveFolder,
+      driveRecursive: url.searchParams.get("driveRecursive") !== "false",
     };
   } catch {
     return null;
@@ -34,17 +48,33 @@ export function fileSeriesInfo(series) {
 // La nube recibe esa referencia de lectura; los bytes del CBR/CBZ siguen en el navegador o en Drive.
 export function fileSeriesUrl(
   series,
-  { book = null, page = 0, issue = 0 } = {},
+  {
+    book = null,
+    page = 0,
+    issue = 0,
+    completed,
+    driveFolder,
+    driveRecursive,
+  } = {},
 ) {
   const old = fileSeriesInfo(series),
     url = new URL(FILE_LIBRARY_URL);
   url.searchParams.set("pvCollection", series.id);
   const website = old ? old.web : series.url;
   if (website) url.searchParams.set("web", httpUrl(website));
+  const folder = driveFolder === undefined ? old?.driveFolder : driveFolder;
+  if (folder) {
+    url.searchParams.set("driveFolder", folderId(folder));
+    if ((driveRecursive ?? old?.driveRecursive) === false)
+      url.searchParams.set("driveRecursive", "false");
+  }
   if (book) {
     url.searchParams.set("book", book);
     url.searchParams.set("page", String(page));
     url.searchParams.set("issue", String(issue));
+    const done = completed ?? (old?.book === book ? old.completed : null);
+    if (done !== null && done !== undefined)
+      url.searchParams.set("completed", String(done === true));
   }
   return httpUrl(url.href);
 }
@@ -102,8 +132,14 @@ export function nextSeriesBook(series, books) {
   const list = seriesBooks(books, series.id),
     info = fileSeriesInfo(series);
   return (
-    list.find((b) => b.id === info?.book && !b.finished) ||
-    list.find((b) => !b.finished) ||
+    list.find((b) => b.id === info?.book && !(info.completed ?? b.finished)) ||
+    (info?.completed === true
+      ? list.find((b) => !b.finished && b.issue > info.issue)
+      : null) ||
+    list.find(
+      (b) =>
+        !(b.id === info?.book ? (info.completed ?? b.finished) : b.finished),
+    ) ||
     list.at(-1) ||
     null
   );
@@ -127,6 +163,7 @@ export function fileSeriesProgress(series, book, books) {
     book: book.id,
     page: book.page,
     issue: book.issue,
+    completed: book.finished === true,
   });
   if (
     wasCurrent &&

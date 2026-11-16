@@ -31,10 +31,20 @@ export function folderId(value) {
   return id;
 }
 // Actualiza el catálogo sin perder el progreso existente. Los archivos ausentes se marcan, no se borran de golpe.
-export function reconcileDrive(current, files, root) {
+export function reconcileDrive(
+  current,
+  files,
+  root,
+  { recursive = true } = {},
+) {
   const map = new Map(current.map((book) => [book.id, book]));
   for (const book of map.values())
-    if (book.source === "drive" && book.root === root)
+    if (
+      book.source === "drive" &&
+      (book.driveParent === root ||
+        (recursive && book.driveAncestors?.includes(root)) ||
+        (!book.driveParent && book.root === root))
+    )
       map.set(book.id, { ...book, missing: true });
   for (const file of files) {
     const id = "drive-" + file.id,
@@ -49,6 +59,8 @@ export function reconcileDrive(current, files, root) {
       name: file.name,
       title: file.name.replace(/\.(cbz|cbr)$/i, ""),
       collection: file.collection || "",
+      driveParent: file.driveParent || root,
+      driveAncestors: file.driveAncestors || [root],
       size: Number(file.size) || 0,
       modifiedTime: file.modifiedTime,
       missing: false,

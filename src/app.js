@@ -1,5 +1,6 @@
 import { initializeSeriesFiles } from "./series-files.js";
 import { fileSeriesInfo, fileSeriesUrl } from "./series-files-model.js";
+import { seriesDriveFolders } from "./series-drive-model.js";
 import { initializeWebReader } from "./web-reader.js";
 import { initializeReader } from "./reader.js";
 import {
@@ -539,6 +540,13 @@ initializeWebReader({
 });
 const fileReader = initializeReader({
   getSeries: () => series,
+  getDriveFolders: () => seriesDriveFolders(series),
+  onError: (message) => seriesFiles?.showError(message),
+  getResumePage: (book) => {
+    const current = series.find((item) => item.id === book.seriesId);
+    const info = current && fileSeriesInfo(current);
+    return info?.book === book.id ? info.page : null;
+  },
   onBooksChange: () => seriesFiles?.refresh(),
   onProgress: (book) => seriesFiles?.progress(book),
   onAttach: (bookId) => seriesFiles?.attach(bookId),
